@@ -264,14 +264,13 @@
   };
 
   /* ---------------- Dinacharya (Morning to Night), ritu/trimester aware ---------------- */
-  function buildDinacharya(rk, month, prakriti) {
+  function buildDinacharya(rk, month) {
     const r = RITUS.find((x) => x.key === rk) || RITUS[0];
     const m = r.mods;
     const mo = MONTHS[Math.min(9, Math.max(1, month)) - 1];
-    const pk = PRAKRITI[prakriti] || PRAKRITI["Vata-Pitta"];
     const nasal = month === 1;
     return [
-      { time: `${m.wake} am`, icon: "🌅", title: "Brahma Muhurta Waking", body: `Wake gently ~90 min before sunrise; sip ${m.water.toLowerCase()}; prayer / gratitude and a calm mantra. ${pk.sleepTip}.`, basis: "Ch. Su. 5 Dinacharya; A.H. Su. 2.1" },
+      { time: `${m.wake} am`, icon: "🌅", title: "Brahma Muhurta Waking", body: `Wake gently ~90 min before sunrise; sip ${m.water.toLowerCase()}; prayer / gratitude and a calm mantra. Maintain a serene routine and 8–9 hours of restful sleep.`, basis: "Ch. Su. 5 Dinacharya; A.H. Su. 2.1" },
       { time: "5:30 am", icon: "🪥", title: "Oral Care & Natural Urges", body: "Mala-mutra visarjana without straining; Danta-dhavana with a soft brush and herbal tooth-powder (Triphala/Yashtimadhu); Jihva-nirlekhana gently; Gandusha with lukewarm water or sesame oil (2 min).", basis: "A.H. Su. 2.1–8; Dantadhavana" },
       { time: "6:00 am", icon: "🧘", title: "Gentle Yoga & Pranayama", body: `10–20 min: Anuloma-Viloma, Bhramari, Sheetali (summer), Sukhasana & Baddha-Konasana (supervised). ${nasal ? "First trimester: light only — no inverted or twisting poses." : "Avoid Kapalabhati, Bhastrika, deep forward bends and breath-holding."}`, basis: "Ch. Sha. 8; DC Dutta antenatal exercise" },
       { time: "6:30 am", icon: "🛁", title: "Abhyanga & Bath", body: `Gentle self-massage with ${m.oil}; avoid deep pressure on the abdomen (esp. Month 1–3) and ankles-pressure points; bath with comfortable (not hot) water; avoid hot water on the head and abdomen.`, basis: "A.H. Su. 2.8–9; Su. Sha. 10" },
@@ -281,7 +280,7 @@
       { time: "1:30 pm", icon: "😴", title: "Divaswapna (Day-Rest) Rule", body: `${m.sleep}. Otherwise rest 20–30 min reclined on the LEFT side without deep sleep; short walk 100 steps after meal (Shatapavali). Avoid supine position after 20 weeks.`, basis: "A.H. Su. 7 Divaswapna; Ch. Su. 21 Nidra" },
       { time: "4:30 pm", icon: "🍵", title: "Evening Snack", body: `${m.evening}. Hydrate; avoid tea/coffee excess (≤1 cup).`, basis: "Ritucharya" },
       { time: "5:30 pm", icon: "🚶", title: "Evening Walk & Pranayama", body: `${m.walk}: 20–30 min easy walk on even ground, Pranayama 5 min; avoid crowded, rough roads or uneven surfaces. Keep phone and Link Code handy.`, basis: "Ch. Sha. 8 Vihara; DC Dutta exercise" },
-      { time: "7:00 pm", icon: "🥗", title: "Light Dinner", body: `Light, warm, freshly cooked: moong-dal khichdi / vegetable soup / phulka with ghee; no curd at night; finish 2–3 hours before sleep. ${pk.tip}`, basis: "A.H. Su. 8; Laghu Ratri Bhojana" },
+      { time: "7:00 pm", icon: "🥗", title: "Light Dinner", body: `Light, warm, freshly cooked: moong-dal khichdi / vegetable soup / phulka with ghee; no curd at night; finish 2–3 hours before sleep. Favor warm, unctuous, easily digestible satvic food.`, basis: "A.H. Su. 8; Laghu Ratri Bhojana" },
       { time: "8:30 pm", icon: "🥛", title: "Bedtime Medicated Milk", body: `${m.night}. This month’s Ksheera/Ghrita: ${mo.ksheera.name} — ${mo.ksheera.detail}`, basis: "Ch. Sha. 8.32 Masanumasika" },
       { time: "9:00 pm", icon: "🎶", title: "Garbha Sanskar (Prenatal Bonding)", body: "20–30 min: soothing Raga / mantra, devotional or positive reading, gentle conversation with the baby, gratitude journaling. Avoid horror, violence, loud noise and arguments.", basis: "Ch. Sha. 4 Manasa Bhava; Su. Sha. 3 (Dauhrida)" },
       { time: "9:45 pm", icon: "🌙", title: "Sleep (Ratri-Svapna)", body: `Sleep by 10 pm on the LEFT lateral side with a pillow between knees; 7–9 hours; keep the room ${r.key === "grishma" || r.key === "sharad" ? "cool and airy" : "warm and covered"}. Avoid night vigil (Ratri-jagarana).`, basis: "A.H. Su. 7.52; Nidra" },
@@ -524,7 +523,7 @@
       { day: "Day 0–3", focus: "Agni-deepana & Vata-shamana", plan: "Warm Panchakola-Yavagu, ghee 15–30 ml, warm water, bed-rest, abdominal binding, early colostrum feeding, perineal care." },
       { day: "Day 4–7", focus: "Brimhana begins", plan: "Soft khichdi with ghee, Mamsa-rasa/dal soup, Abhyanga with Bala taila, Pariseka, Jeeraka-Methi water." },
       { day: "Day 8–21", focus: "Rasayana & lactation", plan: "Methi-ladoo, Shatavari-kalpa, Dashamula-siddha ksheera, gentle walking, Kegel, sunlight 15 min." },
-      { day: "Day 22–45", focus: "Return to Prakriti", plan: "Normal diet with Stanyajanana foods, Pranayama, postnatal exercise, contraceptive counselling; Garbhashaya shodhana — Ashoka-ghrita/Dashamularishta only on advice." },
+      { day: "Day 22–45", focus: "Return to Natural Baseline Health", plan: "Normal diet with Stanyajanana foods, Pranayama, postnatal exercise, contraceptive counselling; Garbhashaya shodhana — Ashoka-ghrita/Dashamularishta only on advice." },
     ],
     avoid: ["Cold water, cold wind, AC drafts, damp floors", "Heavy exertion, stair-climbing, lifting weights, intercourse before 6 weeks", "Day-sleep (excess), night vigil, anger & grief", "Dry, Ruksha, Vata-aggravating food; fasting", "Self-medicated herbs / unsupervised fenugreek in diabetic or bleeding disorders"],
     dcdutta: { title: "Puerperium & Lactation (6 weeks)", text: "Puerperium = from delivery of placenta to 6 weeks. Uterine involution (fundus descends ~1 cm/day; non-palpable per abdomen by day 10–14), lochia: rubra (days 1–4) → serosa (5–9) → alba (10–15+). Exclusive breastfeeding for 6 months, initiate within 1 hour; extra 500 kcal/day; iron + folic acid 100 days post-partum, calcium 500 mg BD for 6 months. Postnatal visits: within 24 h, day 3, day 7, week 6; LAM and contraception counselling; postnatal exercises (Kegel, pelvic tilt)." },
@@ -8341,7 +8340,7 @@
     ],
     "plan": {},
     "id": "sut-ph-3",
-    "title": "Sutika Day 22–45 — Return to Prakriti",
+    "title": "Sutika Day 22–45 — Return to Natural Baseline Health",
     "domain": "sutika",
     "sanskrit_shloka": "",
     "transliteration": "",

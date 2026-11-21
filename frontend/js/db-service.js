@@ -199,6 +199,7 @@
       bloodGroup: "",
       pallor: "None",
       edema: "None",
+      urineAlbumin: "Nil",
       fundalHeight: "",
       fhr: "",
       fetalMovements: "Not assessed",
@@ -229,36 +230,48 @@
 
     /**
      * Retrieve all patients ordered by createdAt descending.
+     * Optionally scoped to an authenticated doctor (doctorUid).
      * Uses Firestore collection query with local cache fallback.
      */
-    async getAllPatients() {
+    async getAllPatients(doctorUid) {
       if (isFirestoreReady && firestore) {
         try {
-          const snap = await firestore
-            .collection("patients")
-            .orderBy("createdAt", "desc")
-            .get();
+          let snap;
+          if (doctorUid) {
+            snap = await firestore
+              .collection("patients")
+              .where("doctorUid", "==", doctorUid)
+              .get();
+          } else {
+            snap = await firestore
+              .collection("patients")
+              .orderBy("createdAt", "desc")
+              .get();
+          }
           if (!snap.empty) {
-            const list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-            const cache = {};
+            let list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+            list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            const cache = read(K.patients, {});
             list.forEach((p) => {
               cache[p.id] = p;
             });
             write(K.patients, cache);
             return list;
+          } else if (doctorUid) {
+            return [];
           }
         } catch (e) {
           console.info("Firestore getAllPatients fallback to local cache:", e.message || e);
         }
       }
-      return Object.values(read(K.patients, {})).sort(
-        (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
-      );
+      return Object.values(read(K.patients, {}))
+        .filter((p) => !doctorUid || p.doctorUid === doctorUid)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     },
 
     // Alias required by existing codebase
-    async listPatients() {
-      return this.getAllPatients();
+    async listPatients(doctorUid) {
+      return this.getAllPatients(doctorUid);
     },
 
     /**
@@ -343,12 +356,17 @@
       const id = data.id || uid("p_");
       const linkCode = data.linkCode || (await this.generateLinkCode());
       const now = Date.now();
+      const currentUser = auth && auth.currentUser;
+      const docUid = data.doctorUid || (currentUser && !currentUser.isAnonymous ? currentUser.uid : null);
+      const docEmail = data.doctorEmail || (currentUser && !currentUser.isAnonymous ? currentUser.email : null);
       const rec = Object.assign(
         {
           id,
           linkCode,
           createdAt: now,
           updatedAt: now,
+          doctorUid: docUid,
+          doctorEmail: docEmail,
           anc: defaultAnc(),
           followUps: []
         },

@@ -617,12 +617,76 @@
       });
     }
 
+    // Extract structured Month-Wise Pathya & Apathya for clinical nutritional guidance
+    let pathya = [];
+    let apathya = [];
+    let ksheeraRegimen = null;
+    const targetMonth =
+      filters.month ||
+      (topChunk && topChunk.month) ||
+      month;
+
+    if (targetMonth && targetMonth >= 1 && targetMonth <= 9) {
+      if (global.KB && global.KB.getMonth) {
+        const mObj = global.KB.getMonth(targetMonth);
+        if (mObj) {
+          pathya = mObj.pathya ? [...mObj.pathya] : [];
+          apathya = mObj.avoid ? [...mObj.avoid] : [];
+          ksheeraRegimen = mObj.ksheera || null;
+        }
+      }
+    }
+
+    // If query was diet or ahara/vihara related or pathya was not found yet
+    if (!pathya.length && topChunk && topChunk.plan && topChunk.plan.pathya) {
+      pathya = [...topChunk.plan.pathya];
+    }
+    if (!apathya.length && topChunk && topChunk.plan && topChunk.plan.avoid) {
+      apathya = [...topChunk.plan.avoid];
+    }
+    if (!ksheeraRegimen && topChunk && topChunk.plan && topChunk.plan.ksheera) {
+      ksheeraRegimen = topChunk.plan.ksheera;
+    }
+
+    // Universal Garbhopaghatakara Apathya if query mentions diet, avoid, food, or a month
+    const isDietOrMonthQuery = Boolean(
+      targetMonth ||
+      filters.domain === "ahara_vihara" ||
+      filters.stage === "garbhopaghatakara" ||
+      /diet|food|ahara|pathya|apathya|avoid|khana|poshan|nutrition|month|masa|maas|mahina/.test(String(question || "").toLowerCase())
+    );
+
+    if (isDietOrMonthQuery) {
+      if (!pathya.length) {
+        pathya = [
+          "Madhura, Snigdha, Sheeta, Hridya ahara (sweet, unctuous, cooling, nourishing foods)",
+          "Fresh cow's milk (Ksheera) boiled with country sugar or medicated herbs",
+          "Pure cow's ghee (Go-Ghrita) daily with warm meals",
+          "Shashtika Shali (aged red rice), wheat, moong dal soup (Mudga Yusha)",
+          "Sweet seasonal fruits (pomegranate, sweet grapes, amla, soaked almonds)"
+        ];
+      }
+      if (!apathya.length) {
+        apathya = [
+          "Katu, Tikshna, Atilavana (excessive chilli, pickles, pungent spices, vinegar)",
+          "Ruksha, Paryushita (stale, deep-fried, packaged or cold-stored food)",
+          "Viruddha Ahara (incompatible combinations: equal milk + fish, fruit + milk)",
+          "Raw papaya, large quantities of pineapple, alcohol, tobacco & caffeine excess",
+          "Tikshna purgatives, unprescribed herbs, and suppression of natural urges (Vega-dharana)"
+        ];
+      }
+    }
+
     return {
       direct_answer: composeAnswer(hits),
       classical_citations: citations,
       samprapti_yukti: yukti,
       dc_dutta_correlation: dcDutta,
       modern_obstetric_correlation: dcDutta,
+      pathya,
+      apathya,
+      ksheera_regimen: ksheeraRegimen,
+      target_month: targetMonth || null,
       red_flags: redFlags,
       related_questions: relQuestions,
       safety_disclaimer: DISCLAIMER,

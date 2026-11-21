@@ -3,14 +3,14 @@
  * Clinical Garbhini & Sutika Paricharya System
  * Dual-role architecture:
  *   - Mother / Patient Self-Care Portal
- *   - Doctor & BAMS Student Workstation
+ *   - Doctor Clinical Workstation
  * Features:
- *   - 6-Digit Link Code (`AG-XXXX`) bidirectional sync via localStorage
+ *   - 6-Digit Link Code (`AG-XXXX`) bidirectional sync via Firebase Firestore
  *   - Interactive Daily Dinacharya Checklist (Morning to Night) + Live Progress Bar
  *   - Dynamic Month (1–9) × Ritu (6 Seasons) Matrix Explorer
  *   - Interactive Symptom & Garbhopaghatakara Triage Checker
  *   - Hospital-Grade A4 Printable Care Card
- *   - Fast Dual-Citation RAG (FastAPI first, offline local KB fallback)
+ *   - Client-Side Dual-Citation BM25 RAG Engine
  * ===================================================================== */
 (function () {
   "use strict";
@@ -29,7 +29,7 @@
     ctab: "case",
     patientId: null,
     selId: null,
-    clinician: { name: "Doctor / Medical Student", tag: "Doctor / Student" },
+    clinician: { name: "Doctor", tag: "Doctor", email: null, uid: null, photoURL: null },
     viewMonth: null,
     rituSel: null,
     fuMonth: null,
@@ -142,7 +142,7 @@
     const ritu = S.rituSel || (src.ritu && src.ritu !== "auto" ? src.ritu : auto);
     const edd = KB.eddFromLmp(src.lmp);
     const toGo = edd ? Math.ceil((new Date(edd + "T00:00:00") - new Date()) / 86400000) : null;
-    return { name: src.name || "Mother", lmp: src.lmp, prakriti: src.prakriti || "Vata-Pitta", weeks, days: g.rem, month, trimester: KB.trimesterOf(weeks), ritu, autoRitu: auto, edd, toGo, rec, src, location: src.location || "" };
+    return { name: src.name || "Mother", lmp: src.lmp, weeks, days: g.rem, month, trimester: KB.trimesterOf(weeks), ritu, autoRitu: auto, edd, toGo, rec, src, location: src.location || "" };
   }
 
   async function currentPatientCtx() {
@@ -314,15 +314,45 @@
         </div>
       </section>
 
-      <!-- Doctor / Student Portal -->
+      <!-- Doctor Portal -->
       <section class="glass portal">
-        <div class="ic">🩺</div><h2>Doctor / Student Portal</h2>
-        <p class="muted small">Unified clinical workstation for clinicians and medical students: register patients, assign 6-digit Link Codes, record ANC vitals &amp; G-P-L-A formula, assess Agni/Koshtha, and manage 1st to 9th month follow-ups.</p>
-        <div class="field"><label>Doctor / Medical Student Name or ID (Optional)</label><input id="c_name" placeholder="e.g. Clinician / Medical Student ID" /></div>
-        <div class="row mt">
-          <button class="btn btn-primary" data-action="enter-clinician">Open Clinical Workstation →</button>
-          <button class="btn btn-ghost btn-sm" data-action="quick-doctor">⚡ Quick Start as Clinician</button>
-        </div>
+        <div class="ic">🩺</div><h2>Doctor Portal</h2>
+        <p class="muted small">Clinical antenatal workstation for doctors &amp; obstetric clinicians: register patients, assign 6-digit Link Codes, record ANC vitals &amp; G-P-L-A formula, assess Agni/Koshtha, and manage 1st to 9th month follow-ups.</p>
+        
+        ${(() => {
+          const user = DB.getCurrentUser();
+          const isDoctorAuthed = Boolean(user && !user.isAnonymous);
+          if (!isDoctorAuthed) {
+            return `
+            <div class="doctor-auth-card mt">
+              <div class="row" style="align-items:center;gap:8px;margin-bottom:8px;">
+                <span class="chip chip-warn">🔒 Authentication Required</span>
+                <span class="small muted">Doctor Workstation Security</span>
+              </div>
+              <p class="small" style="font-weight:600;margin-bottom:6px;">Doctor Sign-In via Google</p>
+              <p class="small muted" style="margin-bottom:14px;">Sign in with your Google account to manage your secure patient directory, generate unique 6-digit Link Codes, and access offline-synchronized ANC case sheets.</p>
+              <button class="btn btn-google btn-lg w100" data-action="doctor-google-login">
+                <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                Sign in with Google (Doctor Workstation)
+              </button>
+            </div>`;
+          }
+          return `
+          <div class="doctor-logged-card mt">
+            <div class="row" style="align-items:center;gap:12px;">
+              ${user.photoURL ? `<img src="${E(user.photoURL)}" alt="Doctor Avatar" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--emerald);object-fit:cover;"/>` : `<div style="width:44px;height:44px;border-radius:50%;background:var(--emerald-d);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.1rem;">${E((user.displayName || "D")[0].toUpperCase())}</div>`}
+              <div>
+                <b style="font-size:1.05rem;">${E(user.displayName || "Doctor")}</b>
+                <p class="muted small mb0">${E(user.email || "")}</p>
+              </div>
+            </div>
+            <div class="field mt"><label>Doctor Name / Title (Optional)</label><input id="c_name" value="${E(S.clinician.name || user.displayName || "Doctor")}" placeholder="e.g. Dr. Sharma (BAMS, MS Ayu)" /></div>
+            <div class="row between mt">
+              <button class="btn btn-primary btn-lg" data-action="enter-clinician">Open Clinical Workstation →</button>
+              <button class="btn btn-ghost btn-sm" data-action="doctor-sign-out">Sign Out</button>
+            </div>
+          </div>`;
+        })()}
         <p class="small muted mt">Generates printable A4 Antenatal Care Cards and provides instantaneous live synchronization with linked patient portals.</p>
       </section>
     </div>
@@ -342,7 +372,7 @@
       <div class="row between">
         <div>
           <h2 class="mb0">🪷 ${E(ctx.name)} ${rec ? `<span class="chip chip-ok">🔗 Link Code: ${E(rec.linkCode)}</span>` : `<span class="chip">Self-Care Mode</span>`}</h2>
-          <p class="muted small mb0">${rec && rec.prakriti ? `${E(rec.prakriti)} Prakriti · ` : ""}${E(ctx.location || "Self-Care")} · EDD: <b>${fmtDate(ctx.edd)}</b></p>
+          <p class="muted small mb0">${E(ctx.location || "Self-Care")} · EDD: <b>${fmtDate(ctx.edd)}</b></p>
         </div>
         <div class="row">
           <span class="chip chip-warn">🍃 Season: ${E(KB.getRitu(ctx.ritu).name)}</span>
@@ -436,7 +466,7 @@
       </div>`
       : `
       <div class="glass card">
-        <h3>🔗 Sync with your Doctor / BAMS Student</h3>
+        <h3>🔗 Sync with your Doctor</h3>
         <p class="muted">Have a 6-digit Link Code (e.g. AG-1084)? Enter it to view your live ANC vitals, prescribed formulations, and next visit date.</p>
         <button class="btn btn-sm btn-ok" data-action="tab" data-v="care">Enter Link Code →</button>
       </div>`}`;
@@ -461,7 +491,7 @@
 
   /* ------------------- Interactive Dinacharya Checklist ------------------- */
   function tabDina(ctx) {
-    const blocks = KB.buildDinacharya(ctx.ritu, ctx.month, ctx.prakriti);
+    const blocks = KB.buildDinacharya(ctx.ritu, ctx.month);
     const r = KB.getRitu(ctx.ritu);
     const checked = getDinaChecks(ctx);
     const total = blocks.length;
@@ -473,7 +503,7 @@
       <div class="row between">
         <div>
           <h2 class="mb0">⏰ Daily Dinacharya Tracker — Month ${ctx.month} · ${E(r.name)} (${E(r.en)})</h2>
-          <p class="muted small mb0">Interactive 24-hour routine tailored for gestational month ${ctx.month}, ${E(ctx.prakriti)} Prakriti, and ${E(r.name)} Ritu.</p>
+          <p class="muted small mb0">Interactive 24-hour routine tailored for gestational month ${ctx.month} and ${E(r.name)} Ritu.</p>
         </div>
         <div class="row">
           <button class="btn btn-sm" data-action="dina-reset">↺ Reset Today</button>
@@ -783,16 +813,42 @@
 
   function tabCare(ctx) {
     const rec = ctx.rec;
+    const user = DB.getCurrentUser();
+    const isMotherAuthed = Boolean(user && !user.isAnonymous);
+    const backupCard = isMotherAuthed ? `
+      <div class="glass card mt">
+        <div class="row between">
+          <div class="row" style="align-items:center;gap:8px;">
+            <span class="chip chip-ok">☁️ Cloud Backup Active</span>
+            <span class="small muted">${E(user.email)}</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-action="mother-sign-out">Disconnect Backup</button>
+        </div>
+      </div>` : `
+      <div class="glass card mt">
+        <div class="row between">
+          <div>
+            <h3 class="mb0">☁️ Cloud Backup across Devices (Optional)</h3>
+            <p class="muted small mb0">Sign in with Google to safely back up your daily Dinacharya checks and care card across phones and computers.</p>
+          </div>
+          <button class="btn btn-sm btn-google" data-action="mother-google-login">
+            <svg class="google-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            Sign in with Google
+          </button>
+        </div>
+      </div>`;
+
     if (!rec) {
       return `
       <div class="glass card">
-        <h2>🔗 Link with your Doctor / BAMS Student</h2>
+        <h2>🔗 Link with your Doctor</h2>
         <p class="muted">Enter the 6-digit Link Code given by your clinician (format: AG-XXXX) to synchronize prescriptions, ANC vitals, and scheduled follow-up dates.</p>
         <div class="row">
           <input id="careCode" placeholder="AG-1084" maxlength="7" style="max-width:220px;text-transform:uppercase;font-weight:700;letter-spacing:.15em"/>
           <button class="btn btn-ok" data-action="link-from-care">Sync Now →</button>
         </div>
-      </div>`;
+      </div>
+      ${backupCard}`;
     }
     const a = rec.anc || {};
     const fus = rec.followUps || [];
@@ -806,7 +862,7 @@
     <div class="glass card">
       <div class="row between">
         <div>
-          <h2 class="mb0">🩺 Synced Doctor / Student Clinical Record</h2>
+          <h2 class="mb0">🩺 Synced Doctor Clinical Record</h2>
           <p class="muted small mb0">${E(rec.clinician || "Clinician")} · Synced ${new Date(rec.updatedAt || Date.now()).toLocaleString("en-IN")}</p>
         </div>
         <span class="chip chip-ok">🔗 Link Code: ${E(rec.linkCode)}</span>
@@ -823,6 +879,7 @@
         ${V("Blood Group", a.bloodGroup)}
         ${V("Pallor", a.pallor)}
         ${V("Edema", a.edema)}
+        ${V("Urine Albumin", a.urineAlbumin || "Nil")}
         ${V("Fundal Ht (wk)", a.fundalHeight)}
         ${V("FHR /min", a.fhr)}
         ${V("Fetal Movements", a.fetalMovements)}
@@ -839,7 +896,7 @@
       <div class="glass card">
         <h3>🌿 Ayurvedic Clinical Assessment</h3>
         <p class="mb0">
-          <b>Prakriti:</b> ${E(rec.prakriti)} · <b>Agni:</b> ${E(a.agni || "Samagni")} · <b>Koshtha:</b> ${E(a.koshtha || "Madhyama")}<br/>
+          <b>Agni:</b> ${E(a.agni || "Samagni")} · <b>Koshtha:</b> ${E(a.koshtha || "Madhyama")}<br/>
           <b>Garbhini Upadrava:</b> ${E((a.upadrava || []).join(", ") || "None")}
         </p>
         ${a.notes ? `<p class="small muted mt mb0">📝 <b>Clinician Notes:</b> ${E(a.notes)}</p>` : ""}
@@ -861,7 +918,8 @@
           <tr><th>Month</th><th>Date</th><th>Wt (kg)</th><th>BP</th><th>Hb</th><th>Formulations</th></tr>
           ${fus.map((f) => `<tr><td>${f.month}</td><td>${fmtDate(f.date)}</td><td>${E(f.weight || "—")}</td><td>${E(f.bp || "—")}</td><td>${E(f.hb || "—")}</td><td>${E(f.formulations || "—")}</td></tr>`).join("")}
         </table>` : `<p class="muted mb0">No historical visits logged.</p>`}
-    </div>`;
+    </div>
+    ${backupCard}`;
   }
 
   /* ------------------- AyurParam-Grade Clinical Q&A Engine ------------------- */
@@ -879,6 +937,29 @@
         ${src}
       </div>
       <p class="mt" style="font-size:1.05rem;line-height:1.65;font-weight:500;">${E(res.direct_answer)}</p>
+
+      ${((res.pathya && res.pathya.length) || (res.apathya && res.apathya.length)) ? `
+        <div class="glass card mt">
+          <div class="row between">
+            <h3 class="mb0">🥗 Clinical Dietary Regimen (पथ्य एवं अपथ्य आहार)</h3>
+            ${res.target_month ? `<span class="chip chip-ok">Month ${res.target_month} Protocol</span>` : ""}
+          </div>
+          <div class="grid g2 mt">
+            <div class="pathya-box">
+              <h4 style="color:var(--emerald);margin-bottom:8px;">✔ Pathya (Recommended Ahara &amp; Vihara)</h4>
+              ${ul(res.pathya, "good-list")}
+            </div>
+            <div class="apathya-box">
+              <h4 style="color:var(--crimson);margin-bottom:8px;">✖ Apathya (Strictly Avoided / Garbhopaghatakara)</h4>
+              ${ul(res.apathya, "bad-list")}
+            </div>
+          </div>
+          ${res.ksheera_regimen ? `
+            <div class="ksheera-box mt">
+              <b style="color:var(--amber);">🥛 Classical Masanumasika Ksheera / Ghrita Formulation:</b>
+              <span>${E(res.ksheera_regimen.name)} — ${E(res.ksheera_regimen.detail)}</span>
+            </div>` : ""}
+        </div>` : ""}
 
       ${res.samprapti_yukti ? `
         <div class="samprapti-box">
@@ -1094,7 +1175,9 @@
   const stepper = (k, v, label) => `<div class="field"><label>${label}</label><div class="stepper" data-stepper="${k}"><button type="button" data-action="step" data-d="-1" aria-label="decrease ${label}">−</button><b>${v}</b><button type="button" data-action="step" data-d="1" aria-label="increase ${label}">＋</button></div></div>`;
 
   async function viewClinician() {
-    const pts = await DB.listPatients();
+    const user = DB.getCurrentUser();
+    const docUid = S.clinician.uid || (user && !user.isAnonymous ? user.uid : null);
+    const pts = await DB.listPatients(docUid);
     if (!pts.find((p) => p.id === S.selId)) S.selId = pts[0] ? pts[0].id : null;
     const sel = pts.find((p) => p.id === S.selId);
     const left = `
@@ -1103,7 +1186,18 @@
         <h3 class="mb0">👩‍⚕️ Patients (${pts.length})</h3>
         <button class="btn btn-sm btn-ok" data-action="new-patient">＋ Register</button>
       </div>
-      <p class="small muted">${E(S.clinician.name || "Doctor / Student")} · <span class="chip">${E(S.clinician.tag || "Doctor / Student")}</span></p>
+      <div style="margin:10px 0;padding:8px 10px;background:var(--glass2);border-radius:10px;border:1px solid var(--line);">
+        <div class="row between" style="align-items:center;">
+          <div class="row" style="align-items:center;gap:8px;">
+            ${user && user.photoURL ? `<img src="${E(user.photoURL)}" alt="Avatar" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--emerald);"/>` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--emerald-d);color:#fff;display:grid;place-items:center;font-size:.75rem;font-weight:700;">${E((S.clinician.name || "D")[0])}</div>`}
+            <div>
+              <b class="small" style="display:block;line-height:1.1;">${E(S.clinician.name || (user && user.displayName) || "Doctor")}</b>
+              <span class="muted" style="font-size:.72rem;">${E(S.clinician.email || (user && user.email) || "Google Verified")}</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-action="doctor-sign-out" title="Sign out" style="font-size:.75rem;padding:3px 8px;">Sign Out</button>
+        </div>
+      </div>
       ${pts.length ? pts.map((p) => {
         const c = ctxFor(p, p);
         return `<button class="patient-row ${p.id === S.selId ? "active" : ""}" data-action="sel-patient" data-id="${p.id}">
@@ -1136,7 +1230,7 @@
           <div class="row between">
             <div>
               <h2 class="mb0">${E(sel.name)} <span class="small muted">· ${sel.age || "—"} yrs</span></h2>
-              <p class="muted small mb0">${ctx.weeks}w ${ctx.days}d · Month ${ctx.month} · EDD: <b>${fmtDate(ctx.edd)}</b> · ${E(sel.prakriti)} · ${E(sel.location || "")}</p>
+              <p class="muted small mb0">${ctx.weeks}w ${ctx.days}d · Month ${ctx.month} · EDD: <b>${fmtDate(ctx.edd)}</b>${sel.location ? ` · ${E(sel.location)}` : ""}</p>
             </div>
             <div class="row">
               <span class="linkcode" title="Give this Link Code to the patient">${E(sel.linkCode)}</span>
@@ -1149,7 +1243,7 @@
         <nav class="tabs glass">
           ${tabs.map((t) => `<button class="tab ${S.ctab === t[0] ? "active" : ""}" data-action="ctab" data-v="${t[0]}">${t[1]}</button>`).join("")}
         </nav>
-        ${S.ctab === "follow" ? followHTML(sel, ctx) : S.ctab === "preview" ? patientShell(ctx, S.tab, true) : caseHTML(sel)}
+        ${S.ctab === "follow" ? followHTML(sel, ctx) : S.ctab === "preview" ? `<div class="embedded-portal-wrap">${patientShell(ctx, S.tab, true)}</div>` : caseHTML(sel)}
       </div>`;
     }
     return `<div class="split">${left}${right}</div>`;
@@ -1158,7 +1252,69 @@
   function caseHTML(p) {
     const a = p.anc || DB.defaultAnc();
     const f = (id, label, v, type, ph) => `<div class="field"><label>${label}</label><input id="c_${id}" type="${type || "text"}" value="${E(v)}" placeholder="${ph || ""}" /></div>`;
+    const fList = (id, label, v, listId, ph) => `<div class="field"><label>${label}</label><input id="c_${id}" list="${listId}" value="${E(v)}" placeholder="${ph || ""}" autocomplete="off" /></div>`;
     return `
+    <datalist id="bp_presets">
+      <option value="110/70">110/70 mmHg (Normal Low)</option>
+      <option value="120/80">120/80 mmHg (Optimal Normotensive)</option>
+      <option value="124/82">124/82 mmHg (Normal)</option>
+      <option value="130/84">130/84 mmHg (High Normal)</option>
+      <option value="140/90">140/90 mmHg (Stage 1 HTN / Alert)</option>
+      <option value="150/96">150/96 mmHg (Severe Gestational HTN)</option>
+      <option value="160/110">160/110 mmHg (Severe Pre-eclampsia Alert)</option>
+    </datalist>
+    <datalist id="pulse_presets">
+      <option value="72">72 bpm (Resting Normal)</option>
+      <option value="76">76 bpm (Resting Normal)</option>
+      <option value="80">80 bpm (Average Pregnancy)</option>
+      <option value="84">84 bpm (Physiological Pregnancy Tachycardia)</option>
+      <option value="90">90 bpm</option>
+      <option value="96">96 bpm</option>
+      <option value="104">104 bpm (Tachycardia / Anaemia Alert)</option>
+    </datalist>
+    <datalist id="weight_presets">
+      <option value="48">48 kg</option>
+      <option value="52">52 kg</option>
+      <option value="56">56 kg</option>
+      <option value="60">60 kg</option>
+      <option value="64">64 kg</option>
+      <option value="68">68 kg</option>
+      <option value="72">72 kg</option>
+      <option value="76">76 kg</option>
+      <option value="80">80 kg</option>
+    </datalist>
+    <datalist id="hb_presets">
+      <option value="12.5">12.5 g/dl (Optimal)</option>
+      <option value="11.8">11.8 g/dl (Normal 1st/3rd Trimester)</option>
+      <option value="11.0">11.0 g/dl (Lower Limit of Normal)</option>
+      <option value="10.5">10.5 g/dl (Mild Anaemia - 2nd Trimester)</option>
+      <option value="9.5">9.5 g/dl (Mild Anaemia)</option>
+      <option value="8.5">8.5 g/dl (Moderate Anaemia - WHO)</option>
+      <option value="6.8">6.8 g/dl (Severe Anaemia - Red Flag)</option>
+    </datalist>
+    <datalist id="fhr_presets">
+      <option value="136">136 bpm (Normal Regular)</option>
+      <option value="140">140 bpm (Normal Regular)</option>
+      <option value="144">144 bpm (Normal Regular)</option>
+      <option value="150">150 bpm (Normal Regular)</option>
+      <option value="156">156 bpm (Normal Regular)</option>
+      <option value="110">110 bpm (Fetal Bradycardia Alert)</option>
+      <option value="168">168 bpm (Fetal Tachycardia Alert)</option>
+    </datalist>
+    <datalist id="edema_presets">
+      <option value="None">None (No swelling)</option>
+      <option value="Mild (pedal)">Mild (pedal) Physiological ankle edema, relieved with rest</option>
+      <option value="Moderate">Moderate (pretibial &amp; pedal pitting edema)</option>
+      <option value="Facial / generalised">Facial / generalised (Pre-eclampsia Alert)</option>
+    </datalist>
+    <datalist id="urine_presets">
+      <option value="Nil">Nil (Normal)</option>
+      <option value="Trace">Trace</option>
+      <option value="1+ (30 mg/dl)">1+ (30 mg/dl)</option>
+      <option value="2+ (100 mg/dl)">2+ (100 mg/dl - Alert)</option>
+      <option value="3+ (300 mg/dl)">3+ (300 mg/dl - Severe PE)</option>
+    </datalist>
+
     <form id="caseForm" onsubmit="return false">
       <div class="glass card">
         <h3>👪 Obstetric History — G · P · L · A</h3>
@@ -1170,25 +1326,25 @@
         </div>
       </div>
       <div class="glass card">
-        <h3>🩺 ANC Vitals &amp; Obstetric Examination</h3>
+        <h3>🩺 ANC Vitals &amp; Obstetric Examination (Dropdown Presets + Custom Typing)</h3>
         <div class="grid g4">
-          ${f("bp", "BP (mmHg)", a.bp, "text", "120/80")}
-          ${f("pulse", "Pulse (/min)", a.pulse, "number")}
-          ${f("weight", "Current Weight (kg)", a.weight, "number")}
-          ${f("prePregWeight", "Pre-Preg Weight (kg)", a.prePregWeight, "number")}
-          ${f("hb", "Hb (g/dl)", a.hb, "number")}
+          ${fList("bp", "BP (mmHg) ▾", a.bp, "bp_presets", "120/80")}
+          ${fList("pulse", "Pulse (/min) ▾", a.pulse, "pulse_presets", "80")}
+          ${fList("weight", "Current Weight (kg) ▾", a.weight, "weight_presets", "60")}
+          ${fList("prePregWeight", "Pre-Preg Weight (kg) ▾", a.prePregWeight, "weight_presets", "54")}
+          ${fList("hb", "Hb (g/dl) ▾", a.hb, "hb_presets", "11.5")}
           <div class="field"><label>Blood Group</label><select id="c_bloodGroup">${opts(BLOOD, a.bloodGroup)}</select></div>
           <div class="field"><label>Pallor</label><select id="c_pallor">${opts(["None", "Mild", "Moderate", "Severe"], a.pallor)}</select></div>
-          <div class="field"><label>Edema</label><select id="c_edema">${opts(["None", "Mild (pedal)", "Moderate", "Facial / generalised"], a.edema)}</select></div>
+          ${fList("edema", "Pedal Edema ▾", a.edema, "edema_presets", "None")}
+          ${fList("urineAlbumin", "Urine Albumin / Proteinuria ▾", a.urineAlbumin || "Nil", "urine_presets", "Nil")}
           ${f("fundalHeight", "Fundal Height (cm / wks)", a.fundalHeight, "number")}
-          ${f("fhr", "FHR (/min)", a.fhr, "number")}
+          ${fList("fhr", "FHR (/min) ▾", a.fhr, "fhr_presets", "140")}
           <div class="field"><label>Fetal Movements</label><select id="c_fetalMovements">${opts(["Not assessed", "Not yet perceived", "Active (≥10/12h)", "Reduced (<10/12h)", "Absent"], a.fetalMovements)}</select></div>
         </div>
       </div>
       <div class="glass card">
         <h3>🌿 Ayurvedic Clinical Assessment</h3>
-        <div class="grid g3">
-          <div class="field"><label>Prakriti</label><select id="c_prakriti">${opts(Object.keys(KB.PRAKRITI), p.prakriti)}</select></div>
+        <div class="grid g2">
           <div class="field"><label>Agni Assessment</label><select id="c_agni">${opts(AGNI, a.agni)}</select></div>
           <div class="field"><label>Koshtha Assessment</label><select id="c_koshtha">${opts(KOSHTHA, a.koshtha)}</select></div>
         </div>
@@ -1238,9 +1394,9 @@
         <div class="ok-card"><b>Classical Samhita Formulation:</b> ${E(m.ksheera.name)} — ${E(m.ksheera.detail)}</div>
         <div class="grid g4">
           <div class="field"><label>Visit Date</label><input type="date" id="f_date" value="${E(ex.date || todayStr())}"/></div>
-          <div class="field"><label>Weight (kg)</label><input type="number" step="0.1" id="f_weight" value="${E(ex.weight || "")}"/></div>
-          <div class="field"><label>Blood Pressure</label><input id="f_bp" placeholder="120/80" value="${E(ex.bp || "")}"/></div>
-          <div class="field"><label>Hb (g/dl)</label><input type="number" step="0.1" id="f_hb" value="${E(ex.hb || "")}"/></div>
+          <div class="field"><label>Weight (kg) ▾</label><input id="f_weight" list="weight_presets" value="${E(ex.weight || "")}" placeholder="e.g. 62"/></div>
+          <div class="field"><label>Blood Pressure ▾</label><input id="f_bp" list="bp_presets" placeholder="120/80" value="${E(ex.bp || "")}"/></div>
+          <div class="field"><label>Hb (g/dl) ▾</label><input id="f_hb" list="hb_presets" value="${E(ex.hb || "")}" placeholder="e.g. 11.2"/></div>
         </div>
         <div class="field">
           <label>Prescribed Formulations <button type="button" class="btn btn-sm" data-action="fu-autofill">✨ Auto-fill from Samhita Plan</button></label>
@@ -1275,7 +1431,7 @@
     const rec = ctx.rec, a = (rec && rec.anc) || {}, m = KB.getMonth(ctx.month), r = KB.getRitu(ctx.ritu);
     const fus = (rec && rec.followUps) || [];
     const last = fus[fus.length - 1];
-    const din = KB.buildDinacharya(ctx.ritu, ctx.month, ctx.prakriti);
+    const din = KB.buildDinacharya(ctx.ritu, ctx.month);
     const li = (arr) => `<ul>${(arr || []).map((x) => `<li>${E(x)}</li>`).join("")}</ul>`;
 
     return `
@@ -1291,7 +1447,7 @@
     </div>
     <div class="adv">${KB.DISCLAIMER}</div>
     <table style="margin-top:8px">
-      <tr><th>Patient Name</th><td><b>${E(ctx.name)}</b></td><th>Age</th><td>${E((rec && rec.age) || "—")} yrs</td><th>Prakriti</th><td>${E(ctx.prakriti)}</td></tr>
+      <tr><th>Patient Name</th><td><b>${E(ctx.name)}</b></td><th>Age</th><td>${E((rec && rec.age) || "—")} yrs</td><th>Gravida/Para</th><td><b>${a.G != null ? `G${a.G} P${a.P} L${a.L} A${a.A}` : "—"}</b></td></tr>
       <tr><th>LMP Date</th><td>${fmtDate(ctx.lmp)}</td><th>Gestational Age</th><td><b>${ctx.weeks}w ${ctx.days}d</b> (Month ${ctx.month})</td><th>Expected EDD</th><td><b>${fmtDate(ctx.edd)}</b></td></tr>
       <tr><th>Current Ritu</th><td>${E(r.name)} (${E(r.en)})</td><th>Development</th><td>${E(m.stage)}</td><th>Attending Doctor</th><td>${E((rec && rec.clinician) || S.clinician.name)}</td></tr>
     </table>
@@ -1340,7 +1496,10 @@
       </tr>
       <tr>
         <th>Agni / Koshtha</th><td colspan="3">${E(a.agni || "Samagni")} / ${E(a.koshtha || "Madhyama")}</td>
-        <th>Upadrava</th><td colspan="3">${E((a.upadrava || []).join(", ") || "None")}</td>
+        <th>Urine Albumin</th><td colspan="3">${E(a.urineAlbumin || "Nil")}</td>
+      </tr>
+      <tr>
+        <th>Garbhini Upadrava</th><td colspan="7">${E((a.upadrava || []).join(", ") || "None")}</td>
       </tr>
       <tr>
         <th>Prescription &amp; Advice</th><td colspan="5"><b>${E(last ? last.formulations : "Follow standard Masanumasika Ksheera-Ghrita protocol")}</b><br/>${E(last ? last.advice : "")}</td>
@@ -1370,24 +1529,50 @@
   /* ------------------------------ ROUTER / RENDER ------------------------------ */
   async function render() {
     const app = $("#app");
+    // Preserve scrollLeft of any active tab containers across re-renders
+    const oldTabs = $$(".tabs");
+    const savedScrolls = oldTabs.map((t) => t.scrollLeft);
+
+    const user = DB.getCurrentUser();
     $("#roleChip").hidden = !S.role;
     $("#switchRole").hidden = !S.role;
     if (S.role) {
-      $("#roleChip").textContent = S.role === "clinician" ? `🩺 ${S.clinician.tag}` : "🤰 Patient";
+      if (S.role === "clinician") {
+        const docName = S.clinician.name || (user && user.displayName) || "Doctor";
+        $("#roleChip").textContent = `🩺 Dr. ${docName.replace(/^Dr\.\s*/i, "")}`;
+      } else {
+        $("#roleChip").textContent = "🤰 Mother / Patient";
+      }
     }
     if (S.role === "clinician") {
       app.innerHTML = await viewClinician();
-      return;
-    }
-    if (S.role === "patient") {
+    } else if (S.role === "patient") {
       const ctx = await currentPatientCtx();
       if (ctx) {
         app.innerHTML = patientShell(ctx, S.tab, false);
-        return;
+      } else {
+        S.role = null;
+        app.innerHTML = viewGateway();
       }
-      S.role = null;
+    } else {
+      app.innerHTML = viewGateway();
     }
-    app.innerHTML = viewGateway();
+
+    // Restore scrollLeft for all tab bars
+    const newTabs = $$(".tabs");
+    newTabs.forEach((t, i) => {
+      if (savedScrolls[i] != null && savedScrolls[i] > 0) {
+        t.scrollLeft = savedScrolls[i];
+      }
+    });
+
+    // Automatically ensure active tab is smoothly in view
+    requestAnimationFrame(() => {
+      const activeTabs = $$(".tab.active");
+      activeTabs.forEach((at) => {
+        at.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+      });
+    });
   }
 
   const rerenderKeepScroll = async () => {
@@ -1532,14 +1717,94 @@
       window.scrollTo(0, 0);
     },
 
+    async "doctor-google-login"() {
+      try {
+        toast("Opening Google Sign-In…");
+        const res = await DB.signInWithGoogle();
+        const u = res && res.user;
+        if (u) {
+          S.clinician = {
+            name: u.displayName || "Doctor",
+            email: u.email,
+            uid: u.uid,
+            photoURL: u.photoURL,
+            tag: "Doctor"
+          };
+          S.role = "clinician";
+          S.ctab = "case";
+          S.selId = null;
+          persist();
+          toast(`🩺 Signed in as Dr. ${u.displayName || u.email}`);
+          await render();
+          window.scrollTo(0, 0);
+        }
+      } catch (err) {
+        console.warn("Doctor Google Sign-In notice:", err.message || err);
+        toast(err.message || "Google Sign-In was cancelled or unavailable", true);
+      }
+    },
+
+    async "doctor-sign-out"() {
+      try {
+        await DB.signOut();
+        S.clinician = { name: "Doctor", tag: "Doctor", email: null, uid: null, photoURL: null };
+        if (S.role === "clinician") {
+          S.role = null;
+          S.selId = null;
+        }
+        persist();
+        toast("Signed out successfully");
+        await render();
+        window.scrollTo(0, 0);
+      } catch (err) {
+        console.warn("Sign out notice:", err);
+      }
+    },
+
+    async "mother-google-login"() {
+      try {
+        toast("Opening Google Sign-In for backup…");
+        const res = await DB.signInWithGoogle();
+        const u = res && res.user;
+        if (u) {
+          toast(`☁️ Backup enabled for ${u.email}`);
+          await render();
+        }
+      } catch (err) {
+        console.warn("Mother Google Sign-In notice:", err.message || err);
+        toast(err.message || "Google Sign-In was cancelled", true);
+      }
+    },
+
+    async "mother-sign-out"() {
+      try {
+        await DB.signOut();
+        toast("Cloud backup disconnected");
+        await render();
+      } catch (err) {
+        console.warn("Mother sign out notice:", err);
+      }
+    },
+
     async "quick-doctor"() {
       closeModal();
+      const u = DB.getCurrentUser();
+      const isAuthed = Boolean(u && !u.isAnonymous);
+      if (!isAuthed) {
+        return H["doctor-google-login"]();
+      }
       S.role = "clinician";
-      S.clinician = { name: "Doctor / Medical Student", tag: "Doctor / Student" };
+      S.clinician = {
+        name: u.displayName || "Doctor",
+        email: u.email,
+        uid: u.uid,
+        photoURL: u.photoURL,
+        tag: "Doctor"
+      };
       S.ctab = "case";
       S.selId = null;
       persist();
-      toast("🩺 Clinical Workstation Opened — Doctor / Student");
+      toast("🩺 Clinical Workstation Opened — Doctor");
       await render();
       window.scrollTo(0, 0);
     },
@@ -1575,8 +1840,19 @@
       await linkCode(val("careCode"));
     },
     async "enter-clinician"() {
+      const u = DB.getCurrentUser();
+      const isAuthed = Boolean(u && !u.isAnonymous);
+      if (!isAuthed) {
+        return H["doctor-google-login"]();
+      }
       S.role = "clinician";
-      S.clinician = { name: val("c_name") || "Doctor / Medical Student", tag: "Doctor / Student" };
+      S.clinician = {
+        name: val("c_name") || u.displayName || "Doctor",
+        email: u.email,
+        uid: u.uid,
+        photoURL: u.photoURL,
+        tag: "Doctor"
+      };
       S.ctab = "case";
       S.selId = null;
       persist();
@@ -1607,6 +1883,9 @@
 
     tab(el) {
       S.tab = el.dataset.v;
+      if (el && el.scrollIntoView) {
+        el.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+      }
       rerenderKeepScroll();
     },
     month(el) {
@@ -1640,7 +1919,7 @@
     "dina-all"() {
       currentPatientCtx().then((ctx) => {
         if (ctx) {
-          const blocks = KB.buildDinacharya(ctx.ritu, ctx.month, ctx.prakriti);
+          const blocks = KB.buildDinacharya(ctx.ritu, ctx.month);
           allDinaChecks(ctx, blocks.length);
           toast("🌟 All Dinacharya steps marked completed!");
           rerenderKeepScroll();
@@ -1678,7 +1957,10 @@
     },
     ctab(el) {
       S.ctab = el.dataset.v;
-      render();
+      if (el && el.scrollIntoView) {
+        el.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+      }
+      rerenderKeepScroll();
     },
     "sel-patient"(el) {
       S.selId = el.dataset.id;
@@ -1700,14 +1982,13 @@
       openModal(`
         <h2>＋ Register Pregnant Patient</h2>
         <p class="muted small">A unique 6-digit Link Code (AG-XXXX) will be generated for the patient portal.</p>
-        <div class="field"><label>Patient Name *</label><input id="n_name"/></div>
+        <div class="field"><label>Patient Name *</label><input id="n_name" placeholder="e.g. Ananya Sharma"/></div>
         <div class="grid g2">
           <div class="field"><label>Age</label><input type="number" id="n_age" value="26"/></div>
-          <div class="field"><label>Phone Number</label><input id="n_phone"/></div>
+          <div class="field"><label>Phone Number</label><input id="n_phone" placeholder="Optional phone"/></div>
           <div class="field"><label>LMP Date *</label><input type="date" id="n_lmp" max="${todayStr()}"/></div>
-          <div class="field"><label>City / Location</label><input id="n_loc"/></div>
+          <div class="field"><label>City / Location</label><input id="n_loc" placeholder="e.g. Pune, Maharashtra"/></div>
         </div>
-        <div class="field"><label>Prakriti</label><select id="n_prak">${opts(Object.keys(KB.PRAKRITI), "Vata-Pitta")}</select></div>
         <div class="row mt">
           <button class="btn btn-ok" data-action="create-patient">Create Patient &amp; Generate Link Code</button>
           <button class="btn btn-ghost" data-action="close-modal">Cancel</button>
@@ -1719,14 +2000,16 @@
       if (!name || !lmp) return toast("Name and LMP date are required", true);
       const g = KB.gestationalWeeks(lmp);
       if (!g || g.days < 0 || g.days > 300) return toast("Please check the LMP date", true);
+      const user = DB.getCurrentUser();
       const rec = await DB.createPatient({
         name,
         age: +val("n_age") || null,
         phone: val("n_phone"),
         lmp,
         location: val("n_loc"),
-        prakriti: val("n_prak"),
-        clinician: `${S.clinician.name} (${S.clinician.tag})`
+        clinician: S.clinician.name || (user && user.displayName) || "Doctor",
+        doctorUid: S.clinician.uid || (user && user.uid) || null,
+        doctorEmail: S.clinician.email || (user && user.email) || null
       });
       S.selId = rec.id;
       persist();
@@ -1777,6 +2060,7 @@
         bloodGroup: val("c_bloodGroup"),
         pallor: val("c_pallor"),
         edema: val("c_edema"),
+        urineAlbumin: val("c_urineAlbumin"),
         fundalHeight: num("c_fundalHeight"),
         fhr: num("c_fhr"),
         fetalMovements: val("c_fetalMovements"),
@@ -1787,7 +2071,6 @@
       };
       if (anc.G < anc.P) return toast("Check G-P-L-A: Gravida must be ≥ Para", true);
       await DB.saveAnc(S.selId, anc);
-      await DB.updatePatient(S.selId, { prakriti: val("c_prakriti") });
       toast("✅ Case sheet saved — patient portal updated");
       render();
     },
@@ -1872,6 +2155,26 @@
     rerenderKeepScroll();
   });
 
+  // Real-time auth state synchronization
+  DB.onAuthStateChanged((user) => {
+    if (user && !user.isAnonymous) {
+      if (S.role === "clinician") {
+        S.clinician = {
+          name: S.clinician.name || user.displayName || "Doctor",
+          email: user.email,
+          uid: user.uid,
+          photoURL: user.photoURL,
+          tag: "Doctor"
+        };
+      }
+    } else if (S.role === "clinician") {
+      // Mandatory doctor auth: return to gateway if signed out
+      S.role = null;
+      S.selId = null;
+    }
+    render();
+  });
+
   /* ------------------------------ BOOT ------------------------------ */
   (async function boot() {
     const th = localStorage.getItem("ayurgarbha:theme");
@@ -1885,6 +2188,13 @@
       S.patientId = s.patientId || null;
       S.clinician = s.clinician || S.clinician;
       S.selId = s.selId || null;
+      // Enforce mandatory Google login for Doctor
+      if (S.role === "clinician") {
+        const u = DB.getCurrentUser();
+        if (!u || u.isAnonymous) {
+          S.role = null;
+        }
+      }
     }
     await DB.seedDemo(false);
     await render();
