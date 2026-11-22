@@ -58,7 +58,7 @@ code { background: var(--glass2); padding: 1px 6px; border-radius: 6px; font-siz
 .pillbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
 .pill { cursor: pointer; font: inherit; border: 1px solid var(--line); background: var(--glass); color: var(--text); border-radius: 99px; padding: 6px 14px; font-weight: 600; font-size: .86rem; }
 .pill.active { background: var(--emerald-d); color: #fff; border-color: transparent; } .pill.now::after { content: " •"; color: var(--amber); }
-.tabs { display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; padding: 6px; margin-bottom: 14px; border-radius: 14px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; max-width: 100%; box-sizing: border-box; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; padding: 6px; margin-bottom: 14px; border-radius: 14px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; max-width: 100%; box-sizing: border-box; }
 .tab { white-space: nowrap; cursor: pointer; font: inherit; border: 0; background: transparent; color: var(--muted); padding: 9px 14px; border-radius: 10px; font-weight: 600; flex-shrink: 0; }
 .tab.active { background: linear-gradient(135deg, var(--crimson), var(--crimson-d)); color: #fff; }
 
@@ -170,9 +170,13 @@ table.t { width: 100%; border-collapse: collapse; font-size: .85rem; } table.t t
 .related-pill:hover { background: var(--emerald-d); color: #fff; border-color: transparent; }
 
 /* pathya & apathya clinical diet boxes */
-.pathya-box { background: var(--ok-bg); border: 1.5px solid var(--emerald); border-radius: 14px; padding: 14px 16px; }
-.apathya-box { background: var(--danger-bg); border: 1.5px solid var(--crimson); border-radius: 14px; padding: 14px 16px; }
-.ksheera-box { background: var(--glass2); border-left: 4px solid var(--amber); border-radius: 10px; padding: 10px 14px; }
+.pathya-apathya-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.pathya-box { background: var(--ok-bg); border: 1.5px solid var(--emerald); border-radius: 14px; padding: 14px 16px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
+.apathya-box { background: var(--danger-bg); border: 1.5px solid var(--crimson); border-radius: 14px; padding: 14px 16px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
+.pathya-box ul, .apathya-box ul, .pathya-box li, .apathya-box li { max-width: 100%; box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
+.ksheera-box { background: var(--glass2); border-left: 4px solid var(--amber); border-radius: 10px; padding: 10px 14px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: break-word; }
+.answer { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: break-word; }
+.answer * { max-width: 100%; box-sizing: border-box; }
 
 /* google auth buttons & cards */
 .btn-google { background: #ffffff; color: #1f2937; border: 1px solid #d1d5db; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; transition: transform .12s, box-shadow .2s; }
@@ -211,4 +215,15 @@ table.t { width: 100%; border-collapse: collapse; font-size: .85rem; } table.t t
   .sheet h2, .sheet table, .sheet .adv, .sheet .avoidbox { break-inside: avoid; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
-@media (max-width: 640px) { .topbar { padding: 8px 12px; } .advisory.sticky { top: 96px; } .timeline { margin-left: 4px; } .sheet { width: 100%; padding: 8mm; } }
+@media (max-width: 768px) {
+  .pathya-apathya-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .g2 { grid-template-columns: minmax(0, 1fr) !important; }
+  .g3 { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 640px) {
+  .topbar { padding: 8px 12px; }
+  .advisory.sticky { top: 96px; }
+  .timeline { margin-left: 4px; }
+  .sheet { width: 100%; padding: 8mm; }
+  .pathya-box, .apathya-box { padding: 12px; }
+}

@@ -29,7 +29,16 @@
     ctab: "case",
     patientId: null,
     selId: null,
-    clinician: { name: "Doctor", tag: "Doctor", email: null, uid: null, photoURL: null },
+    clinician: {
+      name: "Doctor",
+      tag: "Doctor",
+      email: null,
+      uid: null,
+      photoURL: null,
+      clinicName: "",
+      clinicAddress: "",
+      clinicContact: ""
+    },
     viewMonth: null,
     rituSel: null,
     fuMonth: null,
@@ -132,6 +141,19 @@
 
   function closeModal() {
     $("#modal").hidden = true;
+  }
+
+  function ensureTabVisible(tabEl, containerEl) {
+    if (!tabEl) return;
+    const c = containerEl || tabEl.closest(".tabs");
+    if (!c) return;
+    const cRect = c.getBoundingClientRect();
+    const tRect = tabEl.getBoundingClientRect();
+    const isClippedLeft = tRect.left < cRect.left;
+    const isClippedRight = tRect.right > cRect.right;
+    if (isClippedLeft || isClippedRight) {
+      tabEl.scrollIntoView({ behavior: "instant", inline: "nearest", block: "nearest" });
+    }
   }
 
   function ctxFor(src, rec) {
@@ -862,8 +884,10 @@
     <div class="glass card">
       <div class="row between">
         <div>
-          <h2 class="mb0">🩺 Synced Doctor Clinical Record</h2>
-          <p class="muted small mb0">${E(rec.clinician || "Clinician")} · Synced ${new Date(rec.updatedAt || Date.now()).toLocaleString("en-IN")}</p>
+          <h2 class="mb0">🩺 ${E(rec.clinicName || "Synced Doctor Clinical Record")}</h2>
+          <p class="small mb0"><b>Attending Doctor:</b> ${E(rec.doctorName || rec.clinician || "Doctor")}${rec.clinicContact ? ` · 📞 ${E(rec.clinicContact)}` : ""}</p>
+          ${rec.clinicAddress ? `<p class="muted small mb0">📍 ${E(rec.clinicAddress)}</p>` : ""}
+          <p class="muted small mb0">Synced ${new Date(rec.updatedAt || Date.now()).toLocaleString("en-IN")}</p>
         </div>
         <span class="chip chip-ok">🔗 Link Code: ${E(rec.linkCode)}</span>
       </div>
@@ -944,7 +968,7 @@
             <h3 class="mb0">🥗 Clinical Dietary Regimen (पथ्य एवं अपथ्य आहार)</h3>
             ${res.target_month ? `<span class="chip chip-ok">Month ${res.target_month} Protocol</span>` : ""}
           </div>
-          <div class="grid g2 mt">
+          <div class="grid g2 pathya-apathya-grid mt">
             <div class="pathya-box">
               <h4 style="color:var(--emerald);margin-bottom:8px;">✔ Pathya (Recommended Ahara &amp; Vihara)</h4>
               ${ul(res.pathya, "good-list")}
@@ -1197,6 +1221,13 @@
           </div>
           <button class="btn btn-ghost btn-sm" data-action="doctor-sign-out" title="Sign out" style="font-size:.75rem;padding:3px 8px;">Sign Out</button>
         </div>
+        ${S.clinician.clinicName ? `
+          <div style="margin-top:6px;font-size:.74rem;color:var(--text);border-top:1px dashed var(--line);padding-top:4px;">
+            <b>🏥 ${E(S.clinician.clinicName)}</b>
+            ${S.clinician.clinicAddress ? `<div class="muted small" style="font-size:.7rem;">📍 ${E(S.clinician.clinicAddress)}</div>` : ""}
+            ${S.clinician.clinicContact ? `<div class="muted small" style="font-size:.7rem;">📞 ${E(S.clinician.clinicContact)}</div>` : ""}
+          </div>` : ""}
+        <button class="btn btn-sm btn-ghost w100" data-action="edit-clinic-profile" style="margin-top:8px;font-size:.76rem;padding:5px 8px;border:1px dashed var(--line);">✏️ Edit Clinic Profile</button>
       </div>
       ${pts.length ? pts.map((p) => {
         const c = ctxFor(p, p);
@@ -1433,12 +1464,17 @@
     const last = fus[fus.length - 1];
     const din = KB.buildDinacharya(ctx.ritu, ctx.month);
     const li = (arr) => `<ul>${(arr || []).map((x) => `<li>${E(x)}</li>`).join("")}</ul>`;
+    const clinicTitle = (rec && rec.clinicName) || S.clinician.clinicName || "AyurGarbha Integrative Clinical Workstation";
+    const clinicAddr = (rec && rec.clinicAddress) || S.clinician.clinicAddress || "";
+    const clinicCont = (rec && rec.clinicContact) || S.clinician.clinicContact || "";
+    const docName = (rec && (rec.doctorName || rec.clinician)) || S.clinician.name || "Doctor";
 
     return `
     <div class="hdr">
       <div>
-        <h1>🪷 AyurGarbha — Antenatal Care Card</h1>
-        <div style="font-size:9.5pt;font-weight:600;color:#065f46;">Clinical Garbhini &amp; Sutika Paricharya System · Classical Samhita × DC Dutta Obstetrics</div>
+        <h1>🪷 ${E(clinicTitle)}</h1>
+        <div style="font-size:9.5pt;font-weight:600;color:#065f46;">Antenatal Care Card · Clinical Garbhini &amp; Sutika Paricharya System</div>
+        ${clinicAddr ? `<div style="font-size:8pt;color:#555;margin-top:2px;">📍 ${E(clinicAddr)}${clinicCont ? ` · 📞 ${E(clinicCont)}` : ""}</div>` : (clinicCont ? `<div style="font-size:8pt;color:#555;margin-top:2px;">📞 ${E(clinicCont)}</div>` : "")}
       </div>
       <div style="text-align:right;font-size:9pt">
         Date: <b>${fmtDate(todayStr())}</b>
@@ -1449,7 +1485,7 @@
     <table style="margin-top:8px">
       <tr><th>Patient Name</th><td><b>${E(ctx.name)}</b></td><th>Age</th><td>${E((rec && rec.age) || "—")} yrs</td><th>Gravida/Para</th><td><b>${a.G != null ? `G${a.G} P${a.P} L${a.L} A${a.A}` : "—"}</b></td></tr>
       <tr><th>LMP Date</th><td>${fmtDate(ctx.lmp)}</td><th>Gestational Age</th><td><b>${ctx.weeks}w ${ctx.days}d</b> (Month ${ctx.month})</td><th>Expected EDD</th><td><b>${fmtDate(ctx.edd)}</b></td></tr>
-      <tr><th>Current Ritu</th><td>${E(r.name)} (${E(r.en)})</td><th>Development</th><td>${E(m.stage)}</td><th>Attending Doctor</th><td>${E((rec && rec.clinician) || S.clinician.name)}</td></tr>
+      <tr><th>Current Ritu</th><td>${E(r.name)} (${E(r.en)})</td><th>Development</th><td>${E(m.stage)}</td><th>Attending Doctor</th><td><b>${E(docName)}</b>${clinicTitle ? `<br/><span style="font-size:7.5pt;color:#555;">${E(clinicTitle)}</span>` : ""}</td></tr>
     </table>
 
     <h2>Diet Plan — Month ${ctx.month} + ${E(r.name)} Seasonal Additions</h2>
@@ -1514,7 +1550,7 @@
 
     <div class="sig">
       <span>Patient / Guardian Signature</span>
-      <span>Doctor / BAMS Physician Signature &amp; Seal</span>
+      <span><b>${E(docName)}</b><br/><span style="font-size:8pt;font-weight:normal;color:#555;">${E(clinicTitle)} — Signature &amp; Seal</span></span>
     </div>`;
   }
 
@@ -1558,20 +1594,14 @@
       app.innerHTML = viewGateway();
     }
 
-    // Restore scrollLeft for all tab bars
+    // Restore scrollLeft for all tab bars synchronously without smooth animation jump
     const newTabs = $$(".tabs");
     newTabs.forEach((t, i) => {
       if (savedScrolls[i] != null && savedScrolls[i] > 0) {
         t.scrollLeft = savedScrolls[i];
       }
-    });
-
-    // Automatically ensure active tab is smoothly in view
-    requestAnimationFrame(() => {
-      const activeTabs = $$(".tab.active");
-      activeTabs.forEach((at) => {
-        at.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
-      });
+      const at = $(".tab.active", t);
+      if (at) ensureTabVisible(at, t);
     });
   }
 
@@ -1723,18 +1753,22 @@
         const res = await DB.signInWithGoogle();
         const u = res && res.user;
         if (u) {
+          const prof = await DB.getDoctorProfile(u.uid);
           S.clinician = {
-            name: u.displayName || "Doctor",
+            name: (prof && prof.name) || u.displayName || "Doctor",
             email: u.email,
             uid: u.uid,
             photoURL: u.photoURL,
-            tag: "Doctor"
+            tag: "Doctor",
+            clinicName: (prof && prof.clinicName) || "",
+            clinicAddress: (prof && prof.clinicAddress) || "",
+            clinicContact: (prof && prof.clinicContact) || ""
           };
           S.role = "clinician";
           S.ctab = "case";
           S.selId = null;
           persist();
-          toast(`🩺 Signed in as Dr. ${u.displayName || u.email}`);
+          toast(`🩺 Signed in as Dr. ${S.clinician.name}`);
           await render();
           window.scrollTo(0, 0);
         }
@@ -1747,7 +1781,16 @@
     async "doctor-sign-out"() {
       try {
         await DB.signOut();
-        S.clinician = { name: "Doctor", tag: "Doctor", email: null, uid: null, photoURL: null };
+        S.clinician = {
+          name: "Doctor",
+          tag: "Doctor",
+          email: null,
+          uid: null,
+          photoURL: null,
+          clinicName: "",
+          clinicAddress: "",
+          clinicContact: ""
+        };
         if (S.role === "clinician") {
           S.role = null;
           S.selId = null;
@@ -1882,11 +1925,26 @@
     },
 
     tab(el) {
-      S.tab = el.dataset.v;
-      if (el && el.scrollIntoView) {
-        el.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+      const v = el.dataset.v;
+      S.tab = v;
+      const container = el.closest(".tabs");
+      if (container) {
+        $$(".tab[data-action='tab']", container).forEach((t) => t.classList.toggle("active", t === el));
+        ensureTabVisible(el, container);
       }
-      rerenderKeepScroll();
+      const tabBody = $("#tabBody");
+      if (tabBody) {
+        currentPatientCtx().then((ctx) => {
+          if (ctx) {
+            tabBody.innerHTML = patientTab(ctx, S.tab);
+            if (S.tab === "ask") probeBackend();
+          } else {
+            rerenderKeepScroll();
+          }
+        });
+      } else {
+        rerenderKeepScroll();
+      }
     },
     month(el) {
       S.viewMonth = +el.dataset.v;
@@ -1957,8 +2015,10 @@
     },
     ctab(el) {
       S.ctab = el.dataset.v;
-      if (el && el.scrollIntoView) {
-        el.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+      const container = el.closest(".tabs");
+      if (container) {
+        $$(".tab[data-action='ctab']", container).forEach((t) => t.classList.toggle("active", t === el));
+        ensureTabVisible(el, container);
       }
       rerenderKeepScroll();
     },
@@ -1976,6 +2036,82 @@
       const m = KB.getMonth(S.fuMonth || 1);
       $("#f_form").value = `${m.ksheera.name}: ${m.ksheera.detail}`;
       $("#f_advice").value = `Pathya: ${m.pathya.slice(0, 3).join("; ")}. Avoid: ${m.avoid.slice(0, 2).join("; ")}.`;
+    },
+
+    "edit-clinic-profile"() {
+      const user = DB.getCurrentUser();
+      const docName = S.clinician.name || (user && user.displayName) || "Doctor";
+      const clinicName = S.clinician.clinicName || "";
+      const clinicContact = S.clinician.clinicContact || "";
+      const clinicAddress = S.clinician.clinicAddress || "";
+
+      openModal(`
+        <h2>🏥 Edit Doctor &amp; Clinic Profile</h2>
+        <p class="muted small">This branding and contact info will appear on the Patient Portal (Care Team tab) and at the top &amp; seal of the A4 Printable Care Card.</p>
+        <div class="field">
+          <label>Doctor Full Name *</label>
+          <input id="cp_docName" value="${E(docName)}" placeholder="e.g. Dr. Radhika Sharma, BAMS, MD (Ayu)"/>
+        </div>
+        <div class="field">
+          <label>Hospital / Clinic Name</label>
+          <input id="cp_clinicName" value="${E(clinicName)}" placeholder="e.g. AyurGarbha Integrative Maternity Clinic"/>
+        </div>
+        <div class="grid g2">
+          <div class="field">
+            <label>Clinic Contact Phone / Email</label>
+            <input id="cp_clinicContact" value="${E(clinicContact)}" placeholder="e.g. +91 98765 43210"/>
+          </div>
+          <div class="field">
+            <label>Clinic Address / City</label>
+            <input id="cp_clinicAddress" value="${E(clinicAddress)}" placeholder="e.g. Shivaji Nagar, Pune, Maharashtra"/>
+          </div>
+        </div>
+        <div class="row mt">
+          <button class="btn btn-ok" data-action="save-clinic-profile">💾 Save &amp; Sync to Patient Portal</button>
+          <button class="btn btn-ghost" data-action="close-modal">Cancel</button>
+        </div>`);
+    },
+
+    async "save-clinic-profile"() {
+      const docName = val("cp_docName") || "Doctor";
+      const clinicName = val("cp_clinicName");
+      const clinicContact = val("cp_clinicContact");
+      const clinicAddress = val("cp_clinicAddress");
+      const user = DB.getCurrentUser();
+      const docUid = S.clinician.uid || (user && !user.isAnonymous ? user.uid : "local_doctor");
+
+      const prof = {
+        name: docName,
+        clinicName,
+        clinicContact,
+        clinicAddress,
+        email: S.clinician.email || (user && user.email) || null,
+        updatedAt: Date.now()
+      };
+
+      S.clinician.name = docName;
+      S.clinician.clinicName = clinicName;
+      S.clinician.clinicContact = clinicContact;
+      S.clinician.clinicAddress = clinicAddress;
+
+      await DB.saveDoctorProfile(docUid, prof);
+
+      // If a patient is currently selected, update their record with the new clinic details
+      if (S.selId) {
+        const p = await DB.getPatient(S.selId);
+        if (p) {
+          p.doctorName = docName;
+          p.clinician = docName;
+          p.clinicName = clinicName;
+          p.clinicContact = clinicContact;
+          p.clinicAddress = clinicAddress;
+          await DB.savePatient(p);
+        }
+      }
+
+      closeModal();
+      toast("✅ Clinic profile saved & synced");
+      render();
     },
 
     "new-patient"() {
@@ -2008,8 +2144,12 @@
         lmp,
         location: val("n_loc"),
         clinician: S.clinician.name || (user && user.displayName) || "Doctor",
+        doctorName: S.clinician.name || (user && user.displayName) || "Doctor",
         doctorUid: S.clinician.uid || (user && user.uid) || null,
-        doctorEmail: S.clinician.email || (user && user.email) || null
+        doctorEmail: S.clinician.email || (user && user.email) || null,
+        clinicName: S.clinician.clinicName || "",
+        clinicAddress: S.clinician.clinicAddress || "",
+        clinicContact: S.clinician.clinicContact || ""
       });
       S.selId = rec.id;
       persist();
@@ -2071,6 +2211,20 @@
       };
       if (anc.G < anc.P) return toast("Check G-P-L-A: Gravida must be ≥ Para", true);
       await DB.saveAnc(S.selId, anc);
+
+      // Ensure latest clinic profile is synced to this patient record
+      if (S.selId) {
+        const p = await DB.getPatient(S.selId);
+        if (p) {
+          let ch = false;
+          if (S.clinician.name && p.doctorName !== S.clinician.name) { p.doctorName = S.clinician.name; p.clinician = S.clinician.name; ch = true; }
+          if (S.clinician.clinicName && p.clinicName !== S.clinician.clinicName) { p.clinicName = S.clinician.clinicName; ch = true; }
+          if (S.clinician.clinicAddress && p.clinicAddress !== S.clinician.clinicAddress) { p.clinicAddress = S.clinician.clinicAddress; ch = true; }
+          if (S.clinician.clinicContact && p.clinicContact !== S.clinician.clinicContact) { p.clinicContact = S.clinician.clinicContact; ch = true; }
+          if (ch) await DB.savePatient(p);
+        }
+      }
+
       toast("✅ Case sheet saved — patient portal updated");
       render();
     },
@@ -2156,15 +2310,19 @@
   });
 
   // Real-time auth state synchronization
-  DB.onAuthStateChanged((user) => {
+  DB.onAuthStateChanged(async (user) => {
     if (user && !user.isAnonymous) {
       if (S.role === "clinician") {
+        const prof = await DB.getDoctorProfile(user.uid);
         S.clinician = {
-          name: S.clinician.name || user.displayName || "Doctor",
+          name: (prof && prof.name) || S.clinician.name || user.displayName || "Doctor",
           email: user.email,
           uid: user.uid,
           photoURL: user.photoURL,
-          tag: "Doctor"
+          tag: "Doctor",
+          clinicName: (prof && prof.clinicName) || S.clinician.clinicName || "",
+          clinicAddress: (prof && prof.clinicAddress) || S.clinician.clinicAddress || "",
+          clinicContact: (prof && prof.clinicContact) || S.clinician.clinicContact || ""
         };
       }
     } else if (S.role === "clinician") {
@@ -2193,6 +2351,14 @@
         const u = DB.getCurrentUser();
         if (!u || u.isAnonymous) {
           S.role = null;
+        } else {
+          const prof = await DB.getDoctorProfile(u.uid);
+          if (prof) {
+            S.clinician.name = prof.name || S.clinician.name;
+            S.clinician.clinicName = prof.clinicName || S.clinician.clinicName;
+            S.clinician.clinicAddress = prof.clinicAddress || S.clinician.clinicAddress;
+            S.clinician.clinicContact = prof.clinicContact || S.clinician.clinicContact;
+          }
         }
       }
     }

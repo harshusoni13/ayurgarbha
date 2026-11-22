@@ -27,7 +27,8 @@
     patients: NS + "patients",
     session: NS + "session",
     selfProfile: NS + "selfProfile",
-    seeded: NS + "demoSeeded"
+    seeded: NS + "demoSeeded",
+    doctorProfile: NS + "doctorProfile:"
   };
 
   // ---- Tiny local cache helpers ----
@@ -367,6 +368,10 @@
           updatedAt: now,
           doctorUid: docUid,
           doctorEmail: docEmail,
+          doctorName: data.doctorName || data.clinician || "",
+          clinicName: data.clinicName || "",
+          clinicAddress: data.clinicAddress || "",
+          clinicContact: data.clinicContact || "",
           anc: defaultAnc(),
           followUps: []
         },
@@ -555,6 +560,48 @@
     onAuthStateChanged(fn) {
       if (!auth) return () => {};
       return auth.onAuthStateChanged(fn);
+    },
+
+    /* ---------- Doctor & Clinic Profile (Firestore + Local Sync) ---------- */
+    async getDoctorProfile(doctorUid) {
+      if (!doctorUid) return null;
+      if (isFirestoreReady && firestore) {
+        try {
+          const doc = await firestore.collection("doctors").doc(doctorUid).get();
+          if (doc.exists) {
+            const data = Object.assign({ uid: doc.id }, doc.data());
+            write(K.doctorProfile + doctorUid, data);
+            return data;
+          }
+        } catch (e) {
+          console.info("Firestore getDoctorProfile fallback to local cache:", e.message || e);
+        }
+      }
+      return read(K.doctorProfile + doctorUid, null);
+    },
+
+    async saveDoctorProfile(doctorUid, profile) {
+      if (!doctorUid) throw new Error("Missing doctorUid");
+      const now = Date.now();
+      const existing = read(K.doctorProfile + doctorUid, {}) || {};
+      const merged = Object.assign(
+        {},
+        existing,
+        profile,
+        { uid: doctorUid, updatedAt: now }
+      );
+
+      if (isFirestoreReady && firestore) {
+        try {
+          await firestore.collection("doctors").doc(doctorUid).set(merged, { merge: true });
+        } catch (e) {
+          console.info("Firestore saveDoctorProfile notice:", e.message || e);
+        }
+      }
+
+      write(K.doctorProfile + doctorUid, merged);
+      emit();
+      return merged;
     },
 
     /* ---------- Local Session (Stays on Device) ---------- */
