@@ -227,3 +227,173 @@ table.t { width: 100%; border-collapse: collapse; font-size: .85rem; } table.t t
   .sheet { width: 100%; padding: 8mm; }
   .pathya-box, .apathya-box { padding: 12px; }
 }
+
+/* =====================================================================
+ * Phase 1 Production Polish: Clinical Guardrails, ASHA & Bilingual UI
+ * ===================================================================== */
+.global-clinical-strip {
+  width: 100%;
+  background: linear-gradient(90deg, rgba(190, 18, 60, 0.12), rgba(6, 95, 70, 0.12));
+  border-bottom: 1px solid var(--line);
+  padding: 6px 16px;
+  font-size: .78rem;
+  line-height: 1.4;
+  color: var(--text);
+  box-sizing: border-box;
+}
+.global-clinical-strip .strip-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.global-clinical-strip .strip-pill {
+  background: var(--crimson-d);
+  color: #fff;
+  font-weight: 700;
+  font-size: .7rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  letter-spacing: .02em;
+}
+.global-clinical-strip .strip-sep {
+  margin: 0 6px;
+  color: var(--muted);
+}
+
+/* Deterministic Red-Flag Emergency Banner */
+.emergency-banner-critical {
+  background: linear-gradient(135deg, rgba(190, 18, 60, 0.25), rgba(159, 18, 57, 0.15));
+  border: 2px solid var(--crimson);
+  box-shadow: 0 0 20px rgba(225, 29, 72, 0.3);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 14px 0;
+  animation: pulseCritical 2s infinite ease-in-out;
+  box-sizing: border-box;
+  width: 100%;
+}
+@keyframes pulseCritical {
+  0%, 100% { border-color: var(--crimson); box-shadow: 0 0 16px rgba(225, 29, 72, 0.25); }
+  50% { border-color: #fda4af; box-shadow: 0 0 26px rgba(225, 29, 72, 0.45); }
+}
+.emergency-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  color: #ffe4e6;
+  font-weight: 700;
+}
+.emergency-reasons-list {
+  margin: 8px 0 12px;
+  padding-left: 24px;
+  color: #fecdd3;
+  font-size: .88rem;
+}
+.emergency-reasons-list li { margin: 4px 0; font-weight: 600; }
+.emergency-banner-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* Dosage Guardrail Banner / Pill */
+.dosage-guardrail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(217, 119, 6, 0.15);
+  border: 1px solid var(--amber);
+  border-radius: 8px;
+  color: var(--amber);
+  font-size: .76rem;
+  font-weight: 600;
+  margin: 6px 0;
+}
+
+/* Honest Classical Reference Badge */
+.ocr-phase2-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .72rem;
+  padding: 2px 8px;
+  background: var(--glass2);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Risk Triage Badges for ASHA Worker */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.risk-red {
+  background: rgba(225, 29, 72, 0.2);
+  border: 1px solid var(--crimson);
+  color: #fda4af;
+}
+.risk-yellow {
+  background: rgba(217, 119, 6, 0.2);
+  border: 1px solid var(--amber);
+  color: #fcd34d;
+}
+.risk-green {
+  background: rgba(5, 150, 105, 0.2);
+  border: 1px solid var(--emerald);
+  color: #6ee7b7;
+}
+
+/* Judge Demo Button & Drawer */
+.btn-judge-demo {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #111827;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+  border: none;
+  transition: transform .15s, box-shadow .15s;
+}
+.btn-judge-demo:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+  color: #000;
+}
+.demo-preset-card {
+  cursor: pointer;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--glass);
+  transition: all .15s;
+}
+.demo-preset-card:hover {
+  border-color: var(--amber);
+  background: var(--glass2);
+  transform: translateY(-2px);
+}
+
+/* Privacy & Consent Notice (DPDP Act 2023) */
+.privacy-consent-box {
+  border-left: 4px solid var(--emerald);
+  background: var(--glass2);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: .84rem;
+  line-height: 1.5;
+  margin: 12px 0;
+}

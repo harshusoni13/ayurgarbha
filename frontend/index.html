@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AyurGarbha — Clinical Garbhini & Sutika Paricharya System</title>
-  <meta name="description" content="Dual-role Ayurvedic antenatal & postnatal care platform: 9-month Garbhini Paricharya, 6-Ritu adjustments, Dinacharya tracker, Upadrava triage, Sutika & Navajata care, with Samhita + DC Dutta dual-citation RAG." />
+  <title>AyurGarbha — AI Care Companion for Garbhini, Sutika & Navajata Paricharya</title>
+  <meta name="description" content="AI care companion bridging Charaka Samhita & Sushruta Samhita with DC Dutta Obstetrics for antenatal, postnatal & newborn care. Deterministic red-flag triage & field-worker support." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪷</text></svg>" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -14,20 +14,32 @@
   <header class="topbar" id="topbar">
     <a class="brand" href="#" data-action="home" aria-label="AyurGarbha home">
       <span class="brand-mark">🪷</span>
-      <span class="brand-text"><b>AyurGarbha</b><small>Clinical Garbhini & Sutika Paricharya System</small></span>
+      <span class="brand-text"><b>AyurGarbha</b><small id="brandSubtitle">AI Care Companion · Charaka &amp; Sushruta</small></span>
     </a>
     <div class="top-actions">
       <span class="chip" id="roleChip" hidden></span>
-      <span class="chip chip-api chip-ok" id="apiChip" title="Client-Side Dual-Citation RAG Engine (131 Classical Chunks · &lt;10ms)">🟢 RAG: 100% Client-Side (&lt;10ms)</span>
+      <span class="chip chip-api chip-ok" id="apiChip" title="Charaka &amp; Sushruta Hybrid Retrieval Prototype (Phase 2 AyurParam 2.9B Integration Ready)">📖 Charaka &amp; Sushruta RAG</span>
       <button class="btn btn-ghost btn-sm" id="switchRole" data-action="switch-role" hidden>⇄ Switch role</button>
-      <button class="btn btn-ghost btn-sm" data-action="toggle-theme" id="themeBtn" aria-label="Toggle light/dark theme">☀️ Light</button>
+      <button class="btn btn-ghost btn-sm" data-action="toggle-lang" id="langBtn" aria-label="Toggle language English or Hindi">हिन्दी (HI)</button>
     </div>
   </header>
+
+  <!-- Permanent bilingual clinical advisory strip outside #app -->
+  <aside class="global-clinical-strip" role="note" aria-label="Clinical Advisory">
+    <div class="strip-content">
+      <span class="strip-pill">⚕️ Advisory</span>
+      <span class="strip-text">
+        <strong>नैदानिक परामर्श:</strong> यह प्लेटफ़ॉर्म केवल शैक्षिक एवं स्वास्थ्य संवर्धन हेतु है। किसी भी औषधि, बस्ति या आहार परिवर्तन से पूर्व योग्य चिकित्सक / BAMS डॉक्टर से परामर्श अवश्य लें।
+        <span class="strip-sep">·</span>
+        <strong>Clinical Advisory:</strong> For educational &amp; wellness guidance based on Charaka &amp; Sushruta Samhitas and DC Dutta Obstetrics. Always consult a qualified physician before starting any treatment.
+      </span>
+    </div>
+  </aside>
 
   <main id="app" class="container" aria-live="polite"></main>
 
   <footer class="footer no-print">
-    <p><b>AyurGarbha</b> — Clinical Garbhini &amp; Sutika Paricharya System. Evidence-based classical Ayurvedic antenatal &amp; postnatal care correlated with DC Dutta Obstetrics. Powered by 100% serverless client-side BM25 RAG &amp; Firebase Firestore cloud sync.</p>
+    <p><b>AyurGarbha</b> — AI Care Companion for Garbhini, Sutika &amp; Navajata Paricharya. Evidence-based care from Charaka Samhita &amp; Sushruta Samhita correlated with DC Dutta Obstetrics. DPDP Act 2023 aligned.</p>
   </footer>
 
   <!-- Generic modal host -->

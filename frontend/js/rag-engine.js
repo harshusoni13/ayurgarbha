@@ -1,22 +1,14 @@
 /* =====================================================================
  * AyurGarbha — rag-engine.js
- * 100% CLIENT-SIDE DUAL-CITATION RAG ENGINE
- *
- * Runs entirely in the user's browser (<10ms execution, zero cold starts,
- * zero server dependencies). Fully compatible with Netlify static hosting.
+ * Charaka & Sushruta Hybrid Retrieval Prototype
+ * (Phase 2 AyurParam 2.9B Integration Ready)
  *
  * Algorithm:
  * - Multilingual Tokenizer (English, Sanskrit IAST, Devanagari)
- * - BM25Okapi Ranking (k1=1.5, b=0.75) + Vector Cosine Similarity Fusion
+ * - BM25Okapi Ranking (k1=1.5, b=0.75) + Vector Scoring
  * - Multilingual Intent & Entity Extractor (English, Hindi, Hinglish)
  * - Domain Filtering & Metadata Weighted Boosting
- * - AyurParam Clinical Dual-Citation Response Synthesizer:
- *     1. direct_answer (Hindi + English Clinical Synthesis)
- *     2. classical_citations (Sanskrit + IAST + Samhita Ref + Meaning)
- *     3. samprapti_yukti (Dosha-Dhatu-Agni-Ojas Rationale)
- *     4. dc_dutta_correlation (Modern Obstetric Correlation)
- *     5. red_flags (Obstetric Warning Signs)
- *     6. related_questions (3 Interactive Follow-up Questions)
+ * - 2 Core Samhitas Dual-Citation Synthesis (Charaka & Sushruta + DC Dutta)
  * ===================================================================== */
 (function (global) {
   "use strict";
@@ -29,11 +21,8 @@
   const SAMHITA_NAMES = {
     charaka: "Charaka Samhita",
     sushruta: "Sushruta Samhita",
-    ashtanga: "Ashtanga Hridaya",
-    kashyapa: "Kashyapa Samhita",
-    harita: "Harita Samhita",
     dcdutta: "DC Dutta's Textbook of Obstetrics",
-    all: "Classical Samhitas"
+    all: "Charaka & Sushruta Samhitas"
   };
 
   const STOP_WORDS = new Set(
@@ -202,9 +191,6 @@
     // Samhita detection
     if (/charaka|caraka/.test(ql)) f.samhita = "charaka";
     else if (/sushruta|susruta/.test(ql)) f.samhita = "sushruta";
-    else if (/ashtanga|vagbhata|a\.h\./.test(ql)) f.samhita = "ashtanga";
-    else if (/kashyapa|kasyapa/.test(ql)) f.samhita = "kashyapa";
-    else if (/harita/.test(ql)) f.samhita = "harita";
     else if (/dc dutta|dutta|modern/.test(ql)) f.samhita = "dcdutta";
 
     // Clinical stage / domain detection
@@ -508,25 +494,24 @@
 
     const hits = res.hits;
     const filters = res.filters;
+    const MIN_RELEVANCE_THRESHOLD = 0.22;
+    const topScore = hits && hits[0] ? hits[0].score : 0;
 
-    if (!hits || !hits.length) {
+    if (!hits || !hits.length || topScore < MIN_RELEVANCE_THRESHOLD) {
       return {
         direct_answer:
-          "No specific passage found for this exact query. Try querying by month (e.g. 'diet in the 5th month'), a Ritu (e.g. 'Grishma / summer'), Sutika Paricharya, newborn care, or red-flag obstetric symptoms.",
+          "इसका उत्तर उपलब्ध संहिता-पाठ में नहीं है, कृपया योग्य चिकित्सक से परामर्श लें। (Not found in indexed Samhita passages; please consult a qualified physician.)",
         classical_citations: [],
-        samprapti_yukti:
-          "In classical Ayurvedic obstetric care, Vata Anulomana, Agni Rakshana, and Dhatu Poshana form the tripartite foundation of maternal-fetal health.",
-        dc_dutta_correlation:
-          "Standard modern antenatal care includes regular BP, weight, symphysio-fundal height monitoring, fetal heart auscultation, and anomaly screening.",
-        modern_obstetric_correlation:
-          "Standard modern antenatal care includes regular BP, weight, symphysio-fundal height monitoring, fetal heart auscultation, and anomaly screening.",
+        samprapti_yukti: "",
+        dc_dutta_correlation: "",
+        modern_obstetric_correlation: "",
         red_flags: [
           "Any bleeding PV, severe headache, blurred vision, reduced fetal movement, or fever requires same-day medical review."
         ],
         related_questions: [
           "4th Month me Dauhrida ka kya mahatva hai?",
           "8th Month me Ojas asthir kyun hota hai aur kya khayein?",
-          "Sutika paricharya me Panchakola Yavagu aur Udaraveshtana kab karein?"
+          "Sutika paricharya me Panchakola Yavagu kab lein?"
         ],
         safety_disclaimer: DISCLAIMER,
         filters,
@@ -648,35 +633,7 @@
       ksheeraRegimen = topChunk.plan.ksheera;
     }
 
-    // Universal Garbhopaghatakara Apathya if query mentions diet, avoid, food, or a month
-    const isDietOrMonthQuery = Boolean(
-      targetMonth ||
-      filters.domain === "ahara_vihara" ||
-      filters.stage === "garbhopaghatakara" ||
-      /diet|food|ahara|pathya|apathya|avoid|khana|poshan|nutrition|month|masa|maas|mahina/.test(String(question || "").toLowerCase())
-    );
-
-    if (isDietOrMonthQuery) {
-      if (!pathya.length) {
-        pathya = [
-          "Madhura, Snigdha, Sheeta, Hridya ahara (sweet, unctuous, cooling, nourishing foods)",
-          "Fresh cow's milk (Ksheera) boiled with country sugar or medicated herbs",
-          "Pure cow's ghee (Go-Ghrita) daily with warm meals",
-          "Shashtika Shali (aged red rice), wheat, moong dal soup (Mudga Yusha)",
-          "Sweet seasonal fruits (pomegranate, sweet grapes, amla, soaked almonds)"
-        ];
-      }
-      if (!apathya.length) {
-        apathya = [
-          "Katu, Tikshna, Atilavana (excessive chilli, pickles, pungent spices, vinegar)",
-          "Ruksha, Paryushita (stale, deep-fried, packaged or cold-stored food)",
-          "Viruddha Ahara (incompatible combinations: equal milk + fish, fruit + milk)",
-          "Raw papaya, large quantities of pineapple, alcohol, tobacco & caffeine excess",
-          "Tikshna purgatives, unprescribed herbs, and suppression of natural urges (Vega-dharana)"
-        ];
-      }
-    }
-
+    // Diet recommendations are sourced strictly from classical Samhita chunks and Masanumasika Paricharya
     return {
       direct_answer: composeAnswer(hits),
       classical_citations: citations,

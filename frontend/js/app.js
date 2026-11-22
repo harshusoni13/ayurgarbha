@@ -23,7 +23,216 @@
   const ul = (a, c) => `<ul class="clean ${c || ""}">${(a || []).map((x) => `<li>${E(x)}</li>`).join("")}</ul>`;
   const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th"];
 
+  /* ------------------- Bilingual Translations (English & हिन्दी) ------------------- */
+  const I18N = {
+    en: {
+      appName: "AyurGarbha",
+      appSubtitle: "AI Care Companion for Garbhini, Sutika & Navajata Paricharya",
+      heroBadge: "🪷 Evidence-Based Care · Charaka & Sushruta Samhita",
+      heroHeading: "AyurGarbha",
+      heroLead: "Classical Masanumasika Paricharya from <b>Charaka Samhita & Sushruta Samhita</b> correlated with <b>DC Dutta's Textbook of Obstetrics</b>. Multi-layered clinical safety guardrails & DPDP Act 2023 aligned.",
+      judgeDemoBtn: "🎬 Watch Judge Demo (Zero Login)",
+      motherPortalTitle: "Mother / Patient Portal",
+      motherPortalDesc: "Personalized gestational guidance & seasonal Dinacharya from your LMP, or view clinical records synced with an 8-character Share Code.",
+      ashaPortalTitle: "ASHA / Field Worker Portal",
+      ashaPortalDesc: "Community antenatal field workstation: risk-prioritized mother triage, 5-field home visit entries, and instant red-flag detection.",
+      doctorPortalTitle: "Doctor Clinical Workstation",
+      doctorPortalDesc: "Obstetric workstation for clinicians: ANC case sheets, G-P-L-A vitals, Agni/Koshtha, and A4 printable care cards.",
+      lmpTab: "LMP + Ritu + Symptoms",
+      codeTab: "8-Char Share Code",
+      nameOpt: "Your Name (Optional)",
+      lmpLabel: "Last Menstrual Period (LMP) *",
+      locationLabel: "Location / City",
+      seasonLabel: "Current Ritu (Season)",
+      symptomsLabel: "Presenting Complaints / Symptoms (Optional):",
+      enterMotherBtn: "Enter Patient Portal →",
+      shareCodeLabel: "8-Character Share Code (AG-XXXXXX)",
+      syncMotherBtn: "Sync With Doctor / ASHA →",
+      doctorGoogleBtn: "Sign in with Google (Doctor Workstation)",
+      ashaGoogleBtn: "Sign in with Google (ASHA Field Workstation)",
+      quickStart5: "⚡ Quick Start (Month 5 · Grishma)",
+      quickStart8: "⚡ Quick Start (Month 8 · Ojas)",
+      switchRole: "⇄ Switch role",
+      langToggle: "हिन्दी (HI)",
+      deleteMyData: "Delete My Data (मेरा डेटा मिटाएँ)",
+      tabs: {
+        overview: "🏠 Overview",
+        month: "📅 Month × Ritu Plan",
+        dina: "⏰ Daily Dinacharya",
+        triage: "⚠️ Symptom Triage",
+        ritu: "🍃 6 Ritus",
+        avoid: "⛔ Avoid (Apathya)",
+        care: "🩺 Care Team",
+        ask: "🔎 Ask Assistant (RAG)",
+        sutika: "🤱 Sutika (Postnatal)",
+        navajata: "👶 Newborn (Navajata)"
+      }
+    },
+    hi: {
+      appName: "आयुर्गर्भ",
+      appSubtitle: "गर्भिणी, सूतिका एवं नवजात परिचर्या हेतु एआई स्वास्थ्य साथी",
+      heroBadge: "🪷 प्रमाण-आधारित आयुर्वेदिक मातृ एवं शिशु स्वास्थ्य",
+      heroHeading: "आयुर्गर्भ (AyurGarbha)",
+      heroLead: "<b>चरक संहिता एवं सुश्रुत संहिता</b> के प्रामाणिक मासानुमासिक सिद्धांतों का <b>डीसी दत्ता ऑब्सटेट्रिक्स</b> के साथ वैज्ञानिक समन्वय। बहुस्तरीय नैदानिक सुरक्षा एवं डीपीडीपी अधिनियम 2023 के अनुरूप।",
+      judgeDemoBtn: "🎬 डेमो देखें (Judge Demo — बिना लॉगिन)",
+      motherPortalTitle: "गर्भिणी व माता पोर्टल (Self-Care)",
+      motherPortalDesc: "एलएमपी (LMP) से अपने गर्भ माह व ऋतु अनुसार दिनचर्या जानें, अथवा 8-अक्षरी शेयर कोड से डॉक्टर रिकॉर्ड देखें।",
+      ashaPortalTitle: "आशा / एएनएम स्वास्थ्य कार्यकर्ता पोर्टल",
+      ashaPortalDesc: "ग्रामीण मातृ स्वास्थ्य निगरानी: जोखिम-आधारित प्राथमिकता सूची (लाल/पीला/हरा), 5-फील्ड त्वरित विज़िट फ़ॉर्म व रेड-फ़्लैग अलर्ट।",
+      doctorPortalTitle: "चिकित्सक कार्यस्थल (Doctor Workstation)",
+      doctorPortalDesc: "आयुर्वेदिक प्रसूति कार्यस्थल: एएनसी केस शीट, जी-पी-एल-ए सूत्र, अग्नि/कोष्ठ परीक्षा, तथा ए4 प्रिंटेबल केयर कार्ड।",
+      lmpTab: "एलएमपी + ऋतु + लक्षण",
+      codeTab: "8-अक्षरी शेयर कोड",
+      nameOpt: "माता का नाम (वैकल्पिक)",
+      lmpLabel: "अंतिम मासिक धर्म की तिथि (LMP) *",
+      locationLabel: "स्थान / शहर",
+      seasonLabel: "वर्तमान ऋतु",
+      symptomsLabel: "वर्तमान लक्षण / समस्याएं (वैकल्पिक — बहु-चयन):",
+      enterMotherBtn: "माता पोर्टल में प्रवेश करें →",
+      shareCodeLabel: "8-अक्षरी शेयर कोड (AG-XXXXXX)",
+      syncMotherBtn: "डॉक्टर / आशा से सिंक करें →",
+      doctorGoogleBtn: "Google द्वारा डॉक्टर लॉगिन करें",
+      ashaGoogleBtn: "Google द्वारा आशा लॉगिन करें",
+      quickStart5: "⚡ त्वरित शुरुआत (5वां माह · ग्रीष्म)",
+      quickStart8: "⚡ त्वरित शुरुआत (8वां माह · ओज)",
+      switchRole: "⇄ भूमिका बदलें",
+      langToggle: "English (EN)",
+      deleteMyData: "मेरा डेटा मिटाएँ (Delete My Data)",
+      tabs: {
+        overview: "🏠 परिचय",
+        month: "📅 मास × ऋतु योजना",
+        dina: "⏰ दैनिक दिनचर्या",
+        triage: "⚠️ लक्षण ट्राइएज",
+        ritu: "🍃 ६ ऋतुएँ",
+        avoid: "⛔ अपथ्य (वर्जित)",
+        care: "🩺 डॉक्टर व आशा",
+        ask: "🔎 आयुर्वेद सहायक (RAG)",
+        sutika: "🤱 सूतिका (प्रसवोपरांत)",
+        navajata: "👶 नवजात शिशु परिचर्या"
+      }
+    }
+  };
+
+  const t = (k) => {
+    const l = S.lang || "en";
+    const dict = I18N[l] || I18N.en;
+    return dict[k] != null ? dict[k] : (I18N.en[k] != null ? I18N.en[k] : k);
+  };
+
+  /* ------------------- Deterministic Red-Flag Engine (Runs BEFORE AI/RAG) ------------------- */
+  const RED_FLAG_KEYWORDS = [
+    { pattern: /bleeding|bleed|haemorrhage|hemorrhage|blood|रक्त|रक्तस्राव|खून|लाल स्राव/i, labelEn: "Vaginal bleeding / haemorrhage", labelHi: "योनि से रक्तस्राव" },
+    { pattern: /leaking|leak|water broke|fluid gush|amniotic|पानी जाना|पानी छूटना|द्रव स्राव/i, labelEn: "Amniotic fluid leaking (PPROM)", labelHi: "पानी छूटना / थैली फटना" },
+    { pattern: /severe headache|throbbing headache|तेज़ सिरदर्द|असहनीय सिरदर्द/i, labelEn: "Severe persistent headache (Pre-eclampsia warning)", labelHi: "तेज़ सिरदर्द (प्री-एक्लेमप्सिया चेतावनी)" },
+    { pattern: /blurred vision|blur|spots before eyes|धुंधला|धुँधला|आंखों के आगे अंधेरा/i, labelEn: "Blurred vision / visual disturbances", labelHi: "धुँधला दिखना / आँखों के आगे अंधेरा" },
+    { pattern: /reduced movement|decreased movement|no movement|absent movement|कम हलचल|हलचल कम|बच्चा हिल नहीं रहा/i, labelEn: "Reduced or absent fetal movements", labelHi: "गर्भस्थ शिशु की हलचल कम होना" },
+    { pattern: /high fever|chills|shivering|तेज़ बुखार|कम्प|बुखार/i, labelEn: "High fever with chills", labelHi: "तेज़ बुखार व कंपकंपी" },
+    { pattern: /seizure|convulsion|fits|दौरा|झटका/i, labelEn: "Seizures / Eclampsia", labelHi: "दौरा / एक्लेमप्सिया" },
+    { pattern: /severe abdominal pain|intense pelvic pain|पेट में तेज़ दर्द/i, labelEn: "Severe acute abdominal pain", labelHi: "पेट में तेज़ असहनीय दर्द" }
+  ];
+
+  function evaluateRedFlags({ text = "", bp = "", hb = "", fhr = "", pulse = "", complaints = [] } = {}) {
+    const alerts = [];
+    const combinedText = [text, Array.isArray(complaints) ? complaints.join(" ") : ""].join(" ");
+    
+    RED_FLAG_KEYWORDS.forEach((rf) => {
+      if (rf.pattern.test(combinedText)) {
+        alerts.push({ type: "keyword", en: rf.labelEn, hi: rf.labelHi });
+      }
+    });
+
+    if (bp) {
+      const parts = String(bp).split("/").map((s) => parseInt(s.trim(), 10));
+      if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const sys = parts[0], dia = parts[1];
+        if (sys >= 140 || dia >= 90) {
+          alerts.push({
+            type: "vitals",
+            en: `High Blood Pressure (${sys}/${dia} mmHg ≥ 140/90) — Pre-eclampsia risk`,
+            hi: `उच्च रक्तचाप (${sys}/${dia} mmHg ≥ 140/90) — प्री-एक्लेमप्सिया जोखिम`
+          });
+        }
+      }
+    }
+
+    if (hb != null && hb !== "") {
+      const h = parseFloat(hb);
+      if (!isNaN(h) && h > 0 && h < 9.0) {
+        alerts.push({
+          type: "vitals",
+          en: `Severe Anemia (Hb ${h} g/dl < 9.0 g/dl) — Urgent referral required`,
+          hi: `गंभीर रक्ताल्पता / पांडु (Hb ${h} g/dl < 9.0) — तत्काल अस्पताल संदर्भ आवश्यक`
+        });
+      }
+    }
+
+    if (fhr != null && fhr !== "") {
+      const f = parseInt(fhr, 10);
+      if (!isNaN(f) && (f < 110 || f > 160)) {
+        alerts.push({
+          type: "vitals",
+          en: `Abnormal Fetal Heart Rate (${f} bpm; normal 110–160 bpm) — Fetal distress risk`,
+          hi: `असामान्य शिशु हृदय गति (${f} bpm; सामान्य 110–160 bpm) — फीटल डिस्ट्रेस जोखिम`
+        });
+      }
+    }
+
+    const hasRedVitals = alerts.some(a => a.type === "vitals" || a.type === "keyword");
+    let risk = "green";
+    if (hasRedVitals) {
+      risk = "red";
+    } else if ((hb && parseFloat(hb) < 11.0) || combinedText.includes("shopha") || combinedText.includes("edema")) {
+      risk = "yellow";
+    }
+
+    return {
+      triggered: alerts.length > 0,
+      risk,
+      alerts,
+      bannerHTML(lang = "en") {
+        if (!alerts.length) return "";
+        const isHi = lang === "hi";
+        return `
+          <div class="emergency-banner-critical" role="alert">
+            <div class="emergency-banner-title">
+              <span class="emergency-icon">🚨</span>
+              <b>${isHi ? "⚠️ चेतावनी: तुरंत अस्पताल जाएँ / डॉक्टर से संपर्क करें" : "⚠️ Urgent Warning: Go to Hospital / Contact your Doctor immediately."}</b>
+            </div>
+            <ul class="emergency-reasons-list">
+              ${alerts.map(a => `<li>${E(isHi ? a.hi : a.en)}</li>`).join("")}
+            </ul>
+            <div class="emergency-banner-action">
+              <a href="tel:108" class="btn btn-sm btn-danger" style="background:#be123c;color:#fff;font-weight:700;">📞 108 Ambulance</a>
+              <span class="small" style="color:#fecdd3;">${isHi ? "विलंब न करें। यह आपातकालीन लक्षण हो सकता है।" : "Immediate medical evaluation required. Do not delay."}</span>
+            </div>
+          </div>
+        `;
+      }
+    };
+  }
+
+  function filterDosageForPatient(text) {
+    if (!text) return "";
+    return String(text)
+      .replace(/\b(\d+(\.\d+)?\s*(mg|mcg|g|ml|iu)\b[^\.;,\n]*)/gi, "prescribed supportive care")
+      .replace(/thiamine\s*\d+\s*mg/gi, "prescribed neuro-protective therapy")
+      .replace(/pyridoxine\s*\d+\s*mg/gi, "prescribed supportive vitamin therapy")
+      .replace(/iv fluids|intravenous/gi, "supervised hydration");
+  }
+
   const S = {
+    lang: localStorage.getItem("ayur_lang") || "hi",
+    asha: {
+      name: "Sunita Devi",
+      tag: "ASHA Worker",
+      village: "Rampur PHC / Sub-Center",
+      email: null,
+      uid: null,
+      photoURL: null
+    },
+    ashaFilter: "all",
+    ashaPatientId: null,
+    demoActive: false,
     role: null,
     tab: "overview",
     ctab: "case",
@@ -85,20 +294,20 @@
       en: "In the 8th month, vital immune essence (Ojas) remains physiologically labile, continually cycling between maternal and fetal circulation through the umbilical cord. The mother experiences alternating states of high energy and sudden exhaustion. Delivery during this month is fraught with peril due to transient lack of Ojas. Prescribes warm Ksheera-Yavagu with cow's ghee, serene rest, and total avoidance of physical stress.",
       dcdutta: "DC Dutta Ch. 4 & 21 (32–36 Weeks Late Preterm): Fetal pulmonary alveolar type-II pneumocytes are actively producing surfactant (L/S ratio maturation). Preterm delivery before 36 weeks elevates risks of neonatal respiratory distress syndrome (RDS), hypothermia, and neonatal sepsis.",
       red_flags: ["Regular painful uterine contractions (>4 per hour before 37 weeks)", "Sudden clear fluid gush PV (PPROM)", "Elevated blood pressure (>140/90 mmHg) with frontal headache"],
-      citation: "Charaka Samhita, Sharira Sthana 8/24 & Ashtanga Hridaya, Sharira Sthana 1/51"
+      citation: "Charaka Samhita, Sharira Sthana 8/24 & Sushruta Samhita, Sharira Sthana 10/4"
     },
     "preview-4": {
       key: "preview-4",
       badge: "Postnatal · 45-Day Care",
       title: "Sutika Paricharya — Post-Delivery 45-Day Care & Stanyajanana",
-      tagline: "Charaka & Kashyapa Sutika Protocols × DC Dutta 6-Week Puerperium",
+      tagline: "Charaka & Sushruta Sutika Protocols × DC Dutta 6-Week Puerperium",
       shloka: "सूतिकां स्नेहस्वेदाभ्यां उपाचरेत्। पञ्चकोलसिद्धां यवागूं पाययेत्, उदरवेष्टनं च कुर्याद् वातशमनाय गर्भाशयसंकोचनाय च॥",
       iast: "sūtikāṁ snehasvedābhyāṁ upācaret | pañcakolasiddhāṁ yavāgūṁ pāyayet, udaraveṣṭanaṁ ca kuryād vātaśamanāya garbhāśayasaṁkocanāya ca ||",
       hi: "प्रसव के उपरांत माता का शरीर धातु-रिक्त और वात-प्रकोपित होता है। प्रथम 3 दिन स्नेहपान और पंचकोल यवागू से अग्नि दीपन करें। गर्भाशय के संकोच (involution) और वात शमन हेतु उदरवेष्टन (पेट पर सूती वस्त्र लपेटना) करें। बाद में बला तैल अभ्यंग और शतावरी से स्तन्य वृद्धि करें।",
       en: "Following childbirth, maternal Dhatus are severely depleted (Dhatu-Rikta) and Vata is excessively provoked in the empty uterine cavity. Clinical care mandates gentle Bala Taila Abhyanga, warm decoction Parisheka, Panchakola Yavagu (digestive gruel) to rekindle Agni, and firm cotton Udaraveshtana (abdominal wrapping) to assist anatomical involution and eliminate visceral laxity. Galactagogues like Shatavari and garlic stimulate rich breast milk.",
       dcdutta: "DC Dutta Ch. 13 (The Normal Puerperium): Physiological involution of the uterus proceeds at ~1.25 cm daily until returning to pelvis by day 10–12. Prevention of postpartum hemorrhage (PPH), lochial monitoring (rubra -> serosa -> alba), early ambulation to prevent DVT, and exclusive breastfeeding.",
       red_flags: ["Excessive bleeding soaking >1 large pad/hour (Postpartum Hemorrhage)", "Foul-smelling lochial discharge accompanied by fever >100.4°F", "Unilateral severe calf swelling, pain, and erythema (DVT)"],
-      citation: "Charaka Samhita, Sharira Sthana 8/48 & Kashyapa Samhita, Khila Sthana"
+      citation: "Charaka Samhita, Sharira Sthana 8/48 & Sushruta Samhita, Sharira Sthana 10/16"
     }
   };
 
@@ -247,32 +456,40 @@
 
   /* ------------------------------ GATEWAY ------------------------------ */
   function viewGateway() {
+    const isHi = S.lang === "hi";
     const rituOpts =
-      `<option value="auto">Auto-detect from today’s date (${E(KB.getRitu(KB.rituFromDate()).name)})</option>` +
+      `<option value="auto">${isHi ? "आज की तिथि अनुसार ऋतु स्वतः पहचानें" : "Auto-detect from today's date"} (${E(KB.getRitu(KB.rituFromDate()).name)})</option>` +
       KB.RITUS.map((r) => `<option value="${r.key}">${r.name} — ${r.en}</option>`).join("");
 
     const complaints = [
-      ["chhardi", "🤢 Nausea / Vomiting (Chhardi)"],
-      ["vibandha", "🪵 Constipation (Vibandha)"],
-      ["shopha", "💧 Pedal Edema (Shopha)"],
-      ["katishoola", "⚡ Backache (Katishoola)"],
-      ["klama", "😴 Fatigue / Exhaustion (Klama)"],
-      ["vidaha", "🔥 Heartburn / Acidity (Vidaha)"]
+      ["chhardi", isHi ? "🤢 वमन / जी मिचलाना (Chhardi)" : "🤢 Nausea / Vomiting (Chhardi)"],
+      ["vibandha", isHi ? "🪵 विबन्ध / कब्ज़ (Vibandha)" : "🪵 Constipation (Vibandha)"],
+      ["shopha", isHi ? "💧 शोथ / पैरों में सूजन (Shopha)" : "💧 Pedal Edema (Shopha)"],
+      ["katishoola", isHi ? "⚡ कटिशूल / कमर दर्द (Katishoola)" : "⚡ Backache (Katishoola)"],
+      ["klama", isHi ? "😴 क्लम / अत्यधिक थकान (Klama)" : "😴 Fatigue / Exhaustion (Klama)"],
+      ["vidaha", isHi ? "🔥 विदाह / सीने में जलन (Vidaha)" : "🔥 Heartburn / Acidity (Vidaha)"]
     ];
 
     return `
     <section class="hero">
-      <span class="chip chip-ok">🪷 Evidence-Based Ayurvedic Antenatal & Postnatal Care</span>
-      <h1 class="mt">AyurGarbha</h1>
-      <p class="lead" style="font-weight:600;color:var(--emerald);">Clinical Garbhini &amp; Sutika Paricharya System</p>
-      <p class="lead">Classical Masanumasika Paricharya from <b>Charaka, Sushruta, Ashtanga Hridaya, and Kashyapa Samhita</b> correlated with <b>DC Dutta's Textbook of Obstetrics</b>. Dual-role architecture with offline-first synchronization.</p>
+      <span class="chip chip-ok">${E(t("heroBadge"))}</span>
+      <h1 class="mt">${E(t("heroHeading"))}</h1>
+      <p class="lead" style="font-weight:600;color:var(--emerald);">${E(t("appSubtitle"))}</p>
+      <p class="lead">${t("heroLead")}</p>
+
+      <!-- Prominent Judge Demo Button -->
+      <div class="mt" style="margin:16px 0;">
+        <button class="btn btn-judge-demo btn-lg" data-action="open-judge-demo" style="box-shadow:0 6px 20px rgba(16,185,129,.35);font-size:1.1rem;padding:12px 24px;">
+          ${E(t("judgeDemoBtn"))}
+        </button>
+      </div>
       
       <!-- Interactive Clinical Topic Preview Showcase -->
       <div class="topic-previews-wrap mt">
         <div class="row between">
           <div>
-            <h3 class="muted small mb0" style="text-transform:uppercase;letter-spacing:.08em;">Interactive Clinical Topic Previews</h3>
-            <p class="small muted">Click any topic card to inspect authentic Samhita Shlokas &amp; DC Dutta correlations prior to personalized portal entry.</p>
+            <h3 class="muted small mb0" style="text-transform:uppercase;letter-spacing:.08em;">${isHi ? "शास्त्रीय नैदानिक पूर्वावलोकन (Charaka & Sushruta)" : "Interactive Clinical Topic Previews (Charaka & Sushruta)"}</h3>
+            <p class="small muted">${isHi ? "व्यक्तिगत पोर्टल प्रवेश से पूर्व प्रामाणिक संहिता श्लोक एवं डीसी दत्ता समन्वय देखें।" : "Click any topic card to inspect authentic Samhita Shlokas & DC Dutta correlations prior to personalized portal entry."}</p>
           </div>
         </div>
         <div class="grid g2 mt">
@@ -280,13 +497,13 @@
             <div class="glass topic-preview-card" data-action="open-topic-preview" data-topic="${p.key}">
               <div class="topic-preview-header">
                 <span class="topic-preview-badge">🌸 ${E(p.badge)}</span>
-                <span class="chip chip-ok small">Read-Only Preview</span>
+                <span class="chip chip-ok small">${isHi ? "पूर्वावलोकन" : "Read-Only Preview"}</span>
               </div>
               <h3 class="mb0" style="font-size:1.05rem;">${E(p.title)}</h3>
               <p class="small muted mb0">${E(p.tagline)}</p>
               <div class="topic-preview-meta">
                 <span>📜 ${E(p.citation.split(";")[0])}</span>
-                <span style="color:var(--emerald);font-weight:700;">View Clinical Protocol →</span>
+                <span style="color:var(--emerald);font-weight:700;">${isHi ? "प्रोटोकॉल देखें →" : "View Clinical Protocol →"}</span>
               </div>
             </div>
           `).join("")}
@@ -296,23 +513,28 @@
 
     ${banner()}
 
-    <div class="grid g2" id="portalsSection">
-      <!-- Mother / Patient & Self-Care Portal -->
+    <!-- 3 Role Portals: Mother, ASHA, Doctor -->
+    <div class="grid g3 mt" id="portalsSection">
+      <!-- 1. Mother / Patient Portal -->
       <section class="glass portal">
-        <div class="ic">🤰</div><h2>Mother / Patient Self-Care Portal</h2>
-        <p class="muted small">Calculate your customized gestational month and seasonal Dinacharya from your LMP, or view clinical charts synced by your doctor with a 6-digit Link Code.</p>
-        <div class="seg"><button class="active" data-action="gate-tab" data-v="lmp">LMP + Ritu + Complaints</button><button data-action="gate-tab" data-v="code">Clinician Link Code</button></div>
+        <div class="ic">🤰</div>
+        <h2>${E(t("motherPortalTitle"))}</h2>
+        <p class="muted small">${E(t("motherPortalDesc"))}</p>
+        <div class="seg">
+          <button class="active" data-action="gate-tab" data-v="lmp">${E(t("lmpTab"))}</button>
+          <button data-action="gate-tab" data-v="code">${E(t("codeTab"))}</button>
+        </div>
         
         <div id="gate-lmp">
-          <div class="field"><label>Your Name (Optional)</label><input id="g_name" placeholder="e.g. Mother / Self-Care" /></div>
+          <div class="field"><label>${E(t("nameOpt"))}</label><input id="g_name" placeholder="e.g. Mother / Self-Care" /></div>
           <div class="grid g2">
-            <div class="field"><label>Last Menstrual Period (LMP) *</label><input type="date" id="g_lmp" max="${todayStr()}" /></div>
-            <div class="field"><label>Location / City</label><input id="g_loc" placeholder="e.g. Pune, Maharashtra" /></div>
+            <div class="field"><label>${E(t("lmpLabel"))}</label><input type="date" id="g_lmp" max="${todayStr()}" /></div>
+            <div class="field"><label>${E(t("locationLabel"))}</label><input id="g_loc" placeholder="e.g. Pune, Maharashtra" /></div>
           </div>
-          <div class="field"><label>Current Ritu (Season)</label><select id="g_ritu">${rituOpts}</select></div>
+          <div class="field"><label>${E(t("seasonLabel"))}</label><select id="g_ritu">${rituOpts}</select></div>
 
           <div class="mt">
-            <label>Presenting Complaints / Symptoms (Optional — Multi-Select):</label>
+            <label>${E(t("symptomsLabel"))}</label>
             <div class="pillbar" id="complaints-bar">
               ${complaints.map(([k, label]) => `
                 <button type="button" class="pill ${S.selfComplaints.includes(k) ? 'active' : ''}" data-action="toggle-complaint" data-v="${k}">
@@ -322,24 +544,48 @@
             </div>
           </div>
 
-          <div class="row mt">
-            <button class="btn btn-ok" data-action="enter-lmp">Enter Patient Portal →</button>
-            <button class="btn btn-ghost btn-sm" data-action="quick-selfcare-5">⚡ Quick Start (5th Month · Grishma)</button>
-            <button class="btn btn-ghost btn-sm" data-action="quick-selfcare-8">⚡ Quick Start (8th Month · Ojas)</button>
+          <div class="row mt" style="flex-wrap:wrap;gap:8px;">
+            <button class="btn btn-ok" data-action="enter-lmp">${E(t("enterMotherBtn"))}</button>
+            <button class="btn btn-ghost btn-sm" data-action="quick-selfcare-5">${E(t("quickStart5"))}</button>
+            <button class="btn btn-ghost btn-sm" data-action="quick-selfcare-8">${E(t("quickStart8"))}</button>
           </div>
         </div>
 
         <div id="gate-code" hidden>
-          <div class="field"><label>6-Digit Clinician Link Code (AG-XXXX)</label><input id="g_code" placeholder="AG-XXXX" maxlength="7" style="text-transform:uppercase;letter-spacing:.15em;font-weight:700" /></div>
-          <button class="btn btn-ok" data-action="enter-code">Sync With Doctor →</button>
-          <p class="small muted mt">Enter the 6-digit Link Code from your doctor's Antenatal Care Card to view live synced prescriptions, vitals, and next visit schedule.</p>
+          <div class="field"><label>${E(t("shareCodeLabel"))}</label><input id="g_code" placeholder="AG-XXXXXX" maxlength="9" style="text-transform:uppercase;letter-spacing:.15em;font-weight:700" /></div>
+          <button class="btn btn-ok" data-action="enter-code">${E(t("syncMotherBtn"))}</button>
+          <p class="small muted mt">${isHi ? "डॉक्टर या आशा कार्यकर्ता से प्राप्त 8-अक्षरी शेयर कोड दर्ज कर प्रिस्क्रिप्शन एवं विज़िट शेड्यूल देखें।" : "Enter the 8-character Share Code from your doctor or ASHA worker to view live synced prescriptions, vitals, and next visits."}</p>
         </div>
       </section>
 
-      <!-- Doctor Portal -->
+      <!-- 2. ASHA / Field Worker Portal -->
       <section class="glass portal">
-        <div class="ic">🩺</div><h2>Doctor Portal</h2>
-        <p class="muted small">Clinical antenatal workstation for doctors &amp; obstetric clinicians: register patients, assign 6-digit Link Codes, record ANC vitals &amp; G-P-L-A formula, assess Agni/Koshtha, and manage 1st to 9th month follow-ups.</p>
+        <div class="ic">👩‍⚕️</div>
+        <h2>${E(t("ashaPortalTitle"))}</h2>
+        <p class="muted small">${E(t("ashaPortalDesc"))}</p>
+        <div style="margin:14px 0;padding:12px;background:var(--glass2);border-radius:10px;border:1px solid var(--line);">
+          <div class="row" style="align-items:center;gap:6px;margin-bottom:6px;">
+            <span class="chip small" style="background:#fef08a;color:#854d0e;font-weight:700;">Community Health</span>
+            <span class="small muted">Risk Prioritization</span>
+          </div>
+          <p class="small muted mb0" style="font-size:.78rem;">${isHi ? "गाँव की गर्भवती महिलाओं की जोखिम-आधारित निगरानी करें (लाल = अस्पताल संदर्भ, पीला = निकट अवलोकन, हरा = सामान्य देखभाल)।" : "Triage village mothers by risk level (Red = Immediate Referral, Yellow = Close Monitor, Green = Routine Care) with 5-field home visit entry."}</p>
+        </div>
+        <div class="row mt" style="flex-direction:column;gap:8px;">
+          <button class="btn btn-google w100" data-action="asha-google-login">
+            <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            ${E(t("ashaGoogleBtn"))}
+          </button>
+          <button class="btn btn-ghost btn-sm w100" data-action="quick-asha-demo">
+            ⚡ ${isHi ? "त्वरित पूर्वावलोकन (ASHA Demo)" : "Quick Demo (ASHA Mode)"}
+          </button>
+        </div>
+      </section>
+
+      <!-- 3. Doctor Portal -->
+      <section class="glass portal">
+        <div class="ic">🩺</div>
+        <h2>${E(t("doctorPortalTitle"))}</h2>
+        <p class="muted small">${E(t("doctorPortalDesc"))}</p>
         
         ${(() => {
           const user = DB.getCurrentUser();
@@ -347,40 +593,56 @@
           if (!isDoctorAuthed) {
             return `
             <div class="doctor-auth-card mt">
-              <div class="row" style="align-items:center;gap:8px;margin-bottom:8px;">
-                <span class="chip chip-warn">🔒 Authentication Required</span>
-                <span class="small muted">Doctor Workstation Security</span>
+              <div class="row" style="align-items:center;gap:6px;margin-bottom:6px;">
+                <span class="chip chip-warn small">🔒 Auth Required</span>
+                <span class="small muted">Doctor Workstation</span>
               </div>
-              <p class="small" style="font-weight:600;margin-bottom:6px;">Doctor Sign-In via Google</p>
-              <p class="small muted" style="margin-bottom:14px;">Sign in with your Google account to manage your secure patient directory, generate unique 6-digit Link Codes, and access offline-synchronized ANC case sheets.</p>
-              <button class="btn btn-google btn-lg w100" data-action="doctor-google-login">
-                <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-                Sign in with Google (Doctor Workstation)
+              <p class="small muted" style="margin-bottom:10px;font-size:.78rem;">${isHi ? "सुरक्षित मरीज़ डायरेक्टरी, 8-अक्षरी शेयर कोड एवं ऑफ़लाइन-सिंक्ड केस शीट हेतु लॉगिन करें।" : "Sign in to manage your secure patient directory, generate unique 8-character Share Codes, and access offline ANC case sheets."}</p>
+              <button class="btn btn-google w100" data-action="doctor-google-login">
+                <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                ${E(t("doctorGoogleBtn"))}
+              </button>
+              <button class="btn btn-ghost btn-sm w100 mt" data-action="quick-doctor-demo" style="margin-top:8px;">
+                ⚡ ${isHi ? "त्वरित पूर्वावलोकन (Doctor Demo)" : "Quick Demo (Doctor Mode)"}
               </button>
             </div>`;
           }
           return `
           <div class="doctor-logged-card mt">
-            <div class="row" style="align-items:center;gap:12px;">
-              ${user.photoURL ? `<img src="${E(user.photoURL)}" alt="Doctor Avatar" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--emerald);object-fit:cover;"/>` : `<div style="width:44px;height:44px;border-radius:50%;background:var(--emerald-d);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.1rem;">${E((user.displayName || "D")[0].toUpperCase())}</div>`}
+            <div class="row" style="align-items:center;gap:10px;">
+              ${user.photoURL ? `<img src="${E(user.photoURL)}" alt="Avatar" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--emerald);object-fit:cover;"/>` : `<div style="width:38px;height:38px;border-radius:50%;background:var(--emerald-d);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1rem;">${E((user.displayName || "D")[0].toUpperCase())}</div>`}
               <div>
-                <b style="font-size:1.05rem;">${E(user.displayName || "Doctor")}</b>
+                <b style="font-size:1rem;">${E(user.displayName || "Doctor")}</b>
                 <p class="muted small mb0">${E(user.email || "")}</p>
               </div>
             </div>
-            <div class="field mt"><label>Doctor Name / Title (Optional)</label><input id="c_name" value="${E(S.clinician.name || user.displayName || "Doctor")}" placeholder="e.g. Dr. Sharma (BAMS, MS Ayu)" /></div>
+            <div class="field mt"><label>Doctor Name / Title</label><input id="c_name" value="${E(S.clinician.name || user.displayName || "Doctor")}" placeholder="e.g. Dr. Sharma (BAMS, MS Ayu)" /></div>
             <div class="row between mt">
-              <button class="btn btn-primary btn-lg" data-action="enter-clinician">Open Clinical Workstation →</button>
+              <button class="btn btn-primary" data-action="enter-clinician">Open Clinical Workstation →</button>
               <button class="btn btn-ghost btn-sm" data-action="doctor-sign-out">Sign Out</button>
             </div>
           </div>`;
         })()}
-        <p class="small muted mt">Generates printable A4 Antenatal Care Cards and provides instantaneous live synchronization with linked patient portals.</p>
+        <p class="small muted mt">${isHi ? "ए4 प्रिंटेबल एंटीनेटल केयर कार्ड एवं लाइव सिंक।" : "Generates printable A4 Antenatal Care Cards with live synchronization."}</p>
       </section>
     </div>
 
+    <!-- 2-Samhita Stats Strip -->
     <div class="grid g4 mt">
-      ${[["9", "Months × 4 Classical Samhitas"], ["6", "Ritus (Seasonal Regimens)"], ["14", "Interactive Dinacharya Steps"], ["130+", "Evidence-Based Knowledge Chunks"]].map((x) => `<div class="glass stat"><b class="grad">${x[0]}</b><span>${x[1]}</span></div>`).join("")}
+      ${[["9", isHi ? "मास × 2 प्रमुख संहिताएँ (चरक व सुश्रुत)" : "Months × 2 Core Samhitas (Charaka & Sushruta)"], ["6", isHi ? "ऋतुचर्या (मौसमी आहार-विहार)" : "Ritus (Seasonal Regimens)"], ["14", isHi ? "दैनिक दिनचर्या चरण" : "Interactive Dinacharya Steps"], ["88", isHi ? "प्रमाण-आधारित ज्ञान खंड" : "Evidence-Based Knowledge Chunks"]].map((x) => `<div class="glass stat"><b class="grad">${x[0]}</b><span>${x[1]}</span></div>`).join("")}
+    </div>
+
+    <!-- DPDP Act 2023 Consent & Privacy Box -->
+    <div class="privacy-consent-box mt">
+      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px;">
+        <div style="flex:1;min-width:280px;">
+          <b>🔒 DPDP Act 2023 Aligned:</b> ${isHi ? "आपकी स्वास्थ्य जानकारी केवल आपके डिवाइस पर सुरक्षित रहती है। आप जब चाहें अपना डेटा मिटा सकते हैं।" : "Local-first offline storage. Records stay on your device unless shared via secure 8-character Share Code."}
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-sm btn-ghost" data-action="open-consent-modal">${isHi ? "गोपनीयता नीति" : "Privacy & Consent"}</button>
+          <button class="btn btn-sm btn-danger" data-action="delete-my-data">${E(t("deleteMyData"))}</button>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -496,7 +758,7 @@
 
   function samhitaAccordion(n) {
     const rows = KB.SAMHITA_MONTHLY[n];
-    return ["charaka", "sushruta", "ashtanga", "kashyapa"].map((s, i) => {
+    return ["charaka", "sushruta"].map((s, i) => {
       const e = rows[s];
       return `<details class="acc" ${i === 0 ? "open" : ""}>
         <summary>📜 ${E(KB.SAMHITAS[s].name)} <span class="muted small">— ${E(e.ref)}</span></summary>
@@ -673,7 +935,7 @@
     </div>
 
     <div class="glass card">
-      <h3>📚 Classical Masanumasika Paricharya across 4 Samhitas</h3>
+      <h3>📚 Classical Masanumasika Paricharya across 2 Core Samhitas (Charaka & Sushruta)</h3>
       ${samhitaAccordion(sel)}
     </div>
 
@@ -1067,14 +1329,13 @@
       ["all", "All Samhitas"],
       ["charaka", "Charaka"],
       ["sushruta", "Sushruta"],
-      ["ashtanga", "Ashtanga Hridaya"],
-      ["kashyapa", "Kashyapa"]
+            ["kashyapa", "Kashyapa"]
     ];
 
     return `
     <div class="glass card">
-      <h2>🔎 Ask AyurGarbha (AyurParam Clinical Q&A Engine)</h2>
-      <p class="muted small">Evidence-based clinical reasoning assistant supporting English, हिन्दी, and Hinglish queries across Charaka, Sushruta, Ashtanga Hridaya, Kashyapa Samhita &amp; DC Dutta Obstetrics.</p>
+      <h2>🔎 Ask AyurGarbha — Charaka & Sushruta Hybrid Retrieval Prototype</h2>
+      <p class="muted small">Evidence-based clinical reasoning assistant supporting English, हिन्दी, and Hinglish queries grounded in <b>Charaka Samhita, Sushruta Samhita &amp; DC Dutta Obstetrics</b> (Phase 2 AyurParam 2.9B Integration Ready).</p>
       
       <div class="row">
         <input id="askQ" placeholder="Ask in English, हिन्दी, or Hinglish (e.g. 4th Month me Dauhrida ka kya mahatva hai?)" value="${E(S.ask.q)}" style="flex:1;min-width:260px"/>
@@ -1188,6 +1449,429 @@
       ${ul(n.redFlags)}
     </div>
     ${banner("inline")}`;
+  }
+
+  /* ------------------------------ ASHA / ANM FIELD WORKSTATION ------------------------------ */
+  const SAMPLE_ASHA_PATIENTS = [
+    {
+      id: "demo_asha_red",
+      name: "सीता देवी (Sita Devi)",
+      age: 24,
+      phone: "+91 98765 43210",
+      lmp: (() => { const d = new Date(); d.setDate(d.getDate() - 196); return d.toISOString().slice(0, 10); })(),
+      location: "Rampur Village, Ward 4",
+      linkCode: "AG-RED701",
+      shareCode: "AG-RED701",
+      risk: "red",
+      anc: {
+        G: 2, P: 1, L: 1, A: 0,
+        bp: "148/96",
+        weight: "56.5",
+        hb: "8.6",
+        fetalMovements: "Reduced",
+        upadrava: ["तेज़ सिरदर्द (Severe Headache)", "पैरों में सूजन (Pedal Edema)"]
+      },
+      ashaVisits: [
+        {
+          id: "av_1",
+          date: todayStr(),
+          bp: "148/96",
+          weight: "56.5",
+          hb: "8.6",
+          fetalMovements: "reduced",
+          complaint: "Severe headache and blurred vision for 2 days. Swelling over both ankles.",
+          referral: "Urgent Referral to CHC / District Hospital for Pre-eclampsia"
+        }
+      ]
+    },
+    {
+      id: "demo_asha_yellow",
+      name: "आरती बाई (Aarti Bai)",
+      age: 22,
+      phone: "+91 98234 56789",
+      lmp: (() => { const d = new Date(); d.setDate(d.getDate() - 140); return d.toISOString().slice(0, 10); })(),
+      location: "Rampur Village, Ward 2",
+      linkCode: "AG-YEL502",
+      shareCode: "AG-YEL502",
+      risk: "yellow",
+      anc: {
+        G: 1, P: 0, L: 0, A: 0,
+        bp: "122/80",
+        weight: "52.0",
+        hb: "10.2",
+        fetalMovements: "Active",
+        upadrava: ["कब्ज़ (Vibandha)", "हल्की सूजन (Mild Edema)"]
+      },
+      ashaVisits: [
+        {
+          id: "av_2",
+          date: todayStr(),
+          bp: "122/80",
+          weight: "52.0",
+          hb: "10.2",
+          fetalMovements: "active",
+          complaint: "Mild ankle swelling in evening, mild constipation.",
+          referral: "Close Monitor: Prescribe Draksha Ksheerapaka and Iron-rich diet"
+        }
+      ]
+    },
+    {
+      id: "demo_asha_green",
+      name: "कमला शर्मा (Kamla Sharma)",
+      age: 26,
+      phone: "+91 97123 45678",
+      lmp: (() => { const d = new Date(); d.setDate(d.getDate() - 112); return d.toISOString().slice(0, 10); })(),
+      location: "Rampur Village, Ward 1",
+      linkCode: "AG-GRN403",
+      shareCode: "AG-GRN403",
+      risk: "green",
+      anc: {
+        G: 1, P: 0, L: 0, A: 0,
+        bp: "116/74",
+        weight: "49.5",
+        hb: "12.0",
+        fetalMovements: "Active",
+        upadrava: []
+      },
+      ashaVisits: [
+        {
+          id: "av_3",
+          date: todayStr(),
+          bp: "116/74",
+          weight: "49.5",
+          hb: "12.0",
+          fetalMovements: "active",
+          complaint: "Routine 4th month visit. Healthy appetite.",
+          referral: "Routine Care: 4th month Navaneeta-Ksheera regimen"
+        }
+      ]
+    }
+  ];
+
+  function openJudgeDemoModal() {
+    const isHi = S.lang === "hi";
+    openModal(`
+      <div class="row between mb0">
+        <div>
+          <span class="chip chip-ok">🎬 Judge & Evaluator Demo Mode</span>
+          <h2 class="mt" style="font-size:1.35rem;margin-top:6px;">${isHi ? "आयुर्गर्भ त्वरित मूल्यांकन डेमो" : "AyurGarbha Interactive Demo Hub"}</h2>
+        </div>
+      </div>
+      <p class="muted small" style="margin-top:-6px;">${isHi ? "बिना लॉगिन एवं बिना फ़ायरस्टोर लेखन के 5 प्रमुख नैदानिक परिदृश्यों का तुरंत पूर्वावलोकन करें।" : "Explore 5 realistic clinical presets with zero authentication and zero Firestore writes. Perfect for rapid evaluation and video walkthroughs."}</p>
+
+      <div class="grid g1 mt" style="gap:10px;">
+        <!-- Preset 1: Month 5 -->
+        <div class="demo-preset-card glass" data-action="load-demo-mother-5">
+          <div class="row between" style="align-items:center;">
+            <div>
+              <b style="font-size:1.05rem;">🤰 ${isHi ? "माह ५ · चरक संहिता (पंचम मास परिचर्या)" : "Month 5 · Charaka Samhita (Panchama Masa)"}</b>
+              <p class="small muted mb0" style="margin-top:2px;">${isHi ? "गर्भ मन/चेतना जागृति · क्षीर-सर्पि (दूध व घी) · ग्रीष्म ऋतु · टीआईएफएफए स्कैन समन्वय" : "20 Weeks · Grishma Ritu · Fetal Mind Awakening · Ksheera-Sarpi & TIFFA Scan Correlation"}</p>
+            </div>
+            <button class="btn btn-sm btn-ok">${isHi ? "लोड करें →" : "Load Preset →"}</button>
+          </div>
+        </div>
+
+        <!-- Preset 2: Month 8 -->
+        <div class="demo-preset-card glass" data-action="load-demo-mother-8">
+          <div class="row between" style="align-items:center;">
+            <div>
+              <b style="font-size:1.05rem;">🤰 ${isHi ? "माह ८ · सुश्रुत संहिता (अष्टम मास व अस्थिर ओज)" : "Month 8 · Sushruta Samhita (Ashtama Masa & Ojas)"}</b>
+              <p class="small muted mb0" style="margin-top:2px;">${isHi ? "३४ सप्ताह · अस्थिर ओज संरक्षण · आस्थापन व अनुवासन बस्ति · लेट प्रीटर्म सावधानियां" : "34 Weeks · Sharad Ritu · Labile Ojas Protection · Asthapana & Anuvasana Basti Protocol"}</p>
+            </div>
+            <button class="btn btn-sm btn-ok">${isHi ? "लोड करें →" : "Load Preset →"}</button>
+          </div>
+        </div>
+
+        <!-- Preset 3: Sutika -->
+        <div class="demo-preset-card glass" data-action="load-demo-sutika">
+          <div class="row between" style="align-items:center;">
+            <div>
+              <b style="font-size:1.05rem;">🤱 ${isHi ? "सूतिका परिचर्या (प्रसवोपरांत ४५-दिवसीय पुनर्प्राप्ति)" : "Sutika Paricharya (Postnatal 45-Day Care)"}</b>
+              <p class="small muted mb0" style="margin-top:2px;">${isHi ? "प्रसवोपरांत १२वां दिन · बला तैल अभ्यंग · दशमूल क्वाथ · उदरवेष्टन · स्तन्यवर्धन" : "Day 12 Postpartum · Bala Taila Abhyanga · Dashamoola · Udaraveshtana · Galactagogues"}</p>
+            </div>
+            <button class="btn btn-sm btn-ok">${isHi ? "लोड करें →" : "Load Preset →"}</button>
+          </div>
+        </div>
+
+        <!-- Preset 4: Doctor Workstation -->
+        <div class="demo-preset-card glass" data-action="load-demo-doctor">
+          <div class="row between" style="align-items:center;">
+            <div>
+              <b style="font-size:1.05rem;">🩺 ${isHi ? "चिकित्सक कार्यस्थल (ANC केस शीट व प्रिंटेबल कार्ड)" : "Doctor Clinical Workstation (ANC Case Sheet & A4 Card)"}</b>
+              <p class="small muted mb0" style="margin-top:2px;">${isHi ? "डॉ. अनन्या शर्मा · जी-पी-एल-ए सूत्र · अग्नि/कोष्ठ परीक्षा · 8-अक्षरी शेयर कोड · ए4 प्रिंट" : "Dr. Ananya Sharma · G-P-L-A vitals · Agni/Koshtha · 8-character Share Code · Printable A4 Card"}</p>
+            </div>
+            <button class="btn btn-sm btn-primary">${isHi ? "वर्कस्टेशन खोलें →" : "Open Workstation →"}</button>
+          </div>
+        </div>
+
+        <!-- Preset 5: ASHA Risk Triage -->
+        <div class="demo-preset-card glass" data-action="load-demo-asha">
+          <div class="row between" style="align-items:center;">
+            <div>
+              <b style="font-size:1.05rem;">👩‍⚕️ ${isHi ? "आशा कार्यकर्ता जोखिम ट्राइएज (Red/Yellow/Green)" : "ASHA Field Worker Risk Triage (Red/Yellow/Green)"}</b>
+              <p class="small muted mb0" style="margin-top:2px;">${isHi ? "गाँव की माताएं · लाल (तत्काल अस्पताल), पीला (निकट निगरानी), हरा (सामान्य) · 5-फील्ड गृह भेंट" : "Village mother directory · Red (Urgent Referral), Yellow (Monitor), Green (Routine) · 5-field visit tool"}</p>
+            </div>
+            <button class="btn btn-sm btn-warn">${isHi ? "ट्राइएज देखें →" : "Launch Triage →"}</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  function openConsentModal() {
+    const isHi = S.lang === "hi";
+    openModal(`
+      <div class="row between mb0">
+        <div>
+          <span class="chip chip-ok">🔒 DPDP Act 2023 Aligned</span>
+          <h2 class="mt" style="font-size:1.35rem;margin-top:6px;">${isHi ? "डेटा गोपनीयता व सहमति नीति" : "Data Privacy & Clinical Consent"}</h2>
+        </div>
+      </div>
+      <div style="font-size:.9rem;line-height:1.6;margin-top:12px;">
+        <p><b>1. Local-First Architecture:</b> ${isHi ? "आपकी सभी नैदानिक जानकारी (एलएमपी, लक्षण, दिनचर्या प्रगति) आपके ब्राउज़र में सुरक्षित स्थानीय रूप से संग्रहीत होती है।" : "All clinical inputs (LMP, complaints, Dinacharya checklist) are stored locally in your browser's IndexedDB / LocalStorage."}</p>
+        <p><b>2. Zero Third-Party Tracking:</b> ${isHi ? "आयुर्गर्भ किसी भी तीसरे पक्ष या विज्ञापन नेटवर्क के साथ स्वास्थ्य डेटा साझा नहीं करता है।" : "AyurGarbha does not sell or transmit patient health information to advertising networks or third parties."}</p>
+        <p><b>3. Secure 8-Character Share Code:</b> ${isHi ? "डॉक्टर या आशा कार्यकर्ता से केवल तभी डेटा साझा होता है जब आप अपना 8-अक्षरी शेयर कोड (AG-XXXXXX) उन्हें प्रदान करते हैं।" : "Cloud synchronization occurs strictly through an explicit 8-character Share Code (AG-XXXXXX), and private clinical notes are kept doctor-only."}</p>
+        <p><b>4. Right to Erasure (डेटा मिटाने का अधिकार):</b> ${isHi ? "आप किसी भी समय 'मेरा डेटा मिटाएँ' बटन दबाकर अपनी सभी व्यक्तिगत प्रविष्टियों को स्थायी रूप से नष्ट कर सकते हैं।" : "Under India's Digital Personal Data Protection Act 2023, you have the absolute right to erasure. Clicking below permanently deletes all cached records."}</p>
+      </div>
+      <div class="row between mt" style="border-top:1px solid var(--line);padding-top:14px;margin-top:14px;">
+        <button class="btn btn-ghost" data-action="close-modal">${isHi ? "बंद करें" : "Close"}</button>
+        <button class="btn btn-danger" data-action="delete-my-data">${E(t("deleteMyData"))}</button>
+      </div>
+    `);
+  }
+
+  async function viewAsha() {
+    const isHi = S.lang === "hi";
+    const user = DB.getCurrentUser();
+    const ashaUid = S.asha.uid || (user && !user.isAnonymous ? user.uid : null);
+    
+    // Fetch live patients, fallback to sample cases if empty
+    let pts = await DB.listPatients(ashaUid);
+    if (!pts || pts.length === 0) {
+      pts = SAMPLE_ASHA_PATIENTS;
+    }
+
+    // Evaluate risk for each patient
+    const ptsWithRisk = pts.map(p => {
+      const rf = evaluateRedFlags({
+        text: (p.anc && (p.anc.upadrava || []).join(" ")) || "",
+        bp: (p.anc && p.anc.bp) || "",
+        hb: (p.anc && p.anc.hb) || "",
+        fhr: (p.anc && p.anc.fhr) || ""
+      });
+      return Object.assign({}, p, { evaluatedRisk: rf.risk, redFlags: rf });
+    });
+
+    const redCount = ptsWithRisk.filter(p => p.evaluatedRisk === "red").length;
+    const yellowCount = ptsWithRisk.filter(p => p.evaluatedRisk === "yellow").length;
+    const greenCount = ptsWithRisk.filter(p => p.evaluatedRisk === "green").length;
+
+    let filtered = ptsWithRisk;
+    if (S.ashaFilter === "red") filtered = ptsWithRisk.filter(p => p.evaluatedRisk === "red");
+    else if (S.ashaFilter === "yellow") filtered = ptsWithRisk.filter(p => p.evaluatedRisk === "yellow");
+    else if (S.ashaFilter === "green") filtered = ptsWithRisk.filter(p => p.evaluatedRisk === "green");
+
+    if (!filtered.find(p => p.id === S.ashaPatientId)) {
+      S.ashaPatientId = filtered[0] ? filtered[0].id : null;
+    }
+    const sel = filtered.find(p => p.id === S.ashaPatientId) || filtered[0];
+    const selCtx = sel ? ctxFor(sel, sel) : null;
+
+    return `
+    <section class="asha-workstation">
+      <!-- ASHA Header Bar -->
+      <div class="glass card mb">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px;">
+          <div class="row" style="align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;border-radius:50%;background:#059669;color:#fff;display:grid;place-items:center;font-size:1.3rem;">👩‍⚕️</div>
+            <div>
+              <div class="row" style="align-items:center;gap:8px;">
+                <b style="font-size:1.15rem;">${E(S.asha.name || (user && user.displayName) || "Sunita Devi")}</b>
+                <span class="chip chip-ok small">ASHA Worker</span>
+              </div>
+              <p class="muted small mb0">📍 ${E(S.asha.village)} · ${isHi ? "सामुदायिक मातृ स्वास्थ्य निगरानी कार्यस्थल" : "Community Maternal Health & Field Triage"}</p>
+            </div>
+          </div>
+          <div class="row" style="gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-ghost" data-action="switch-role">${E(t("switchRole"))}</button>
+            <button class="btn btn-sm btn-ghost" data-action="asha-sign-out">${isHi ? "साइन आउट" : "Sign Out"}</button>
+          </div>
+        </div>
+
+        <!-- Risk Triage Summary Strip -->
+        <div class="grid g4 mt" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
+          <button class="btn ${S.ashaFilter === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-action="asha-filter" data-v="all">
+            ${isHi ? "सभी माताएँ" : "All Mothers"} (${ptsWithRisk.length})
+          </button>
+          <button class="btn ${S.ashaFilter === 'red' ? 'btn-danger' : 'btn-ghost'} btn-sm" data-action="asha-filter" data-v="red" style="color:#e11d48;font-weight:700;">
+            🚨 ${isHi ? "उच्च जोखिम (रेफरल)" : "Urgent Referral"} (${redCount})
+          </button>
+          <button class="btn ${S.ashaFilter === 'yellow' ? 'btn-warn' : 'btn-ghost'} btn-sm" data-action="asha-filter" data-v="yellow" style="color:#d97706;font-weight:700;">
+            ⚠️ ${isHi ? "मध्यम (निगरानी)" : "Close Monitor"} (${yellowCount})
+          </button>
+          <button class="btn ${S.ashaFilter === 'green' ? 'btn-ok' : 'btn-ghost'} btn-sm" data-action="asha-filter" data-v="green" style="color:#059669;font-weight:700;">
+            ✅ ${isHi ? "सामान्य देखभाल" : "Routine Care"} (${greenCount})
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Dual-Column: Directory on Left, Quick Home Visit on Right -->
+      <div class="grid g2" style="grid-template-columns:minmax(300px, 380px) minmax(0, 1fr);gap:18px;align-items:start;">
+        <!-- Left: Village Mother Directory -->
+        <aside class="glass card" style="padding:14px;">
+          <div class="row between" style="align-items:center;margin-bottom:12px;">
+            <h3 class="mb0" style="font-size:1rem;">🏘️ ${isHi ? "गाँव की गर्भवती सूची" : "Village Mother Directory"} (${filtered.length})</h3>
+            <button class="btn btn-sm btn-ok" data-action="new-asha-patient">＋ ${isHi ? "नया नाम" : "Register"}</button>
+          </div>
+
+          <div class="asha-patient-list" style="display:flex;flex-direction:column;gap:10px;max-height:680px;overflow-y:auto;padding-right:4px;">
+            ${filtered.map(p => {
+              const isSel = sel && sel.id === p.id;
+              const g = KB.gestationalWeeks(p.lmp) || { weeks: 0 };
+              const m = KB.monthFromWeeks(g.weeks);
+              const rClass = p.evaluatedRisk === "red" ? "risk-red" : (p.evaluatedRisk === "yellow" ? "risk-yellow" : "risk-green");
+              const rLabel = p.evaluatedRisk === "red" ? (isHi ? "🚨 उच्च जोखिम" : "🚨 Urgent Referral") : (p.evaluatedRisk === "yellow" ? (isHi ? "⚠️ मध्यम जोखिम" : "⚠️ Close Monitor") : (isHi ? "✅ सामान्य" : "✅ Routine Care"));
+              return `
+                <div class="glass patient-item ${isSel ? 'active' : ''}" data-action="sel-asha-patient" data-id="${p.id}" style="padding:10px 12px;border-radius:10px;cursor:pointer;border:1.5px solid ${isSel ? 'var(--emerald)' : 'var(--line)'};">
+                  <div class="row between" style="align-items:center;">
+                    <b style="font-size:.95rem;">${E(p.name)}</b>
+                    <span class="risk-badge ${rClass}" style="font-size:.72rem;">${rLabel}</span>
+                  </div>
+                  <div class="row between mt" style="margin-top:4px;font-size:.78rem;color:var(--text-muted);">
+                    <span>${g.weeks}w (मास ${m}) · ${E(p.location || "Village")}</span>
+                    <span style="font-family:monospace;font-weight:700;color:var(--emerald);">${E(p.linkCode || p.shareCode || "—")}</span>
+                  </div>
+                  <div class="row between mt" style="margin-top:6px;font-size:.76rem;background:var(--glass2);padding:4px 8px;border-radius:6px;">
+                    <span>BP: <b>${E((p.anc && p.anc.bp) || "—")}</b></span>
+                    <span>Hb: <b>${E((p.anc && p.anc.hb) ? p.anc.hb + ' g/dl' : "—")}</b></span>
+                    <span>Wt: <b>${E((p.anc && p.anc.weight) ? p.anc.weight + ' kg' : "—")}</b></span>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </aside>
+
+        <!-- Right: Active Mother Quick Home Visit Entry & Advice -->
+        <main class="glass card" style="padding:18px;">
+          ${sel ? `
+            <!-- Mother Header Card -->
+            <div class="row between" style="align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px;">
+              <div>
+                <div class="row" style="align-items:center;gap:10px;">
+                  <h2 class="mb0" style="font-size:1.3rem;">${E(sel.name)}</h2>
+                  <span class="risk-badge ${sel.evaluatedRisk === 'red' ? 'risk-red' : (sel.evaluatedRisk === 'yellow' ? 'risk-yellow' : 'risk-green')}">
+                    ${sel.evaluatedRisk === 'red' ? (isHi ? "🚨 उच्च जोखिम (रेफरल)" : "🚨 Urgent Referral") : (sel.evaluatedRisk === 'yellow' ? (isHi ? "⚠️ मध्यम निगरानी" : "⚠️ Close Monitor") : (isHi ? "✅ सामान्य देखभाल" : "✅ Routine Care"))}
+                  </span>
+                </div>
+                <p class="muted small mb0" style="margin-top:4px;">
+                  ${sel.age ? sel.age + ' वर्ष · ' : ''}LMP: ${fmtDate(sel.lmp)} · EDD: <b>${fmtDate(selCtx ? selCtx.edd : null)}</b> (${selCtx ? selCtx.weeks + ' सप्ताह, मास ' + selCtx.month : ''})
+                </p>
+              </div>
+              <div style="text-align:right;">
+                <span class="chip chip-ok" style="font-family:monospace;font-weight:700;font-size:.9rem;">🔗 ${E(sel.linkCode || sel.shareCode || "AG-XXXXXX")}</span>
+                <p class="muted small mb0" style="font-size:.72rem;margin-top:4px;">${isHi ? "8-अक्षरी शेयर कोड" : "8-Char Share Code"}</p>
+              </div>
+            </div>
+
+            <!-- Deterministic Red-Flag Alert Container -->
+            ${sel.redFlags && sel.redFlags.triggered ? sel.redFlags.bannerHTML(S.lang) : ''}
+
+            <!-- 5-Field Mobile Quick Home Visit Form -->
+            <div style="background:var(--glass2);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-top:14px;">
+              <div class="row between" style="align-items:center;margin-bottom:12px;">
+                <h3 class="mb0" style="font-size:1.05rem;color:var(--emerald-d);">📝 ${isHi ? "त्वरित गृह भेंट प्रविष्टि (5-Field Mobile Entry)" : "5-Field Quick Home Visit Form"}</h3>
+                <span class="small muted">${fmtDate(todayStr())}</span>
+              </div>
+              
+              <div class="grid g2" style="gap:12px;">
+                <div class="field">
+                  <label>1. ${isHi ? "रक्तचाप (Blood Pressure mmHg)" : "Blood Pressure (mmHg)"} *</label>
+                  <input id="asha_bp" placeholder="e.g. 120/80" value="${E((sel.anc && sel.anc.bp) || '')}" />
+                  <span class="small muted" style="font-size:.72rem;">${isHi ? "≥ 140/90 होने पर तुरंत लाल चेतावनी" : "≥ 140/90 triggers Pre-eclampsia warning"}</span>
+                </div>
+                <div class="field">
+                  <label>2. ${isHi ? "वजन (Weight in kg)" : "Weight (kg)"}</label>
+                  <input type="number" id="asha_wt" step="0.1" placeholder="e.g. 54.0" value="${E((sel.anc && sel.anc.weight) || '')}" />
+                </div>
+                <div class="field">
+                  <label>3. ${isHi ? "हीमोग्लोबिन (Hb g/dl)" : "Hemoglobin (Hb g/dl)"} *</label>
+                  <input type="number" id="asha_hb" step="0.1" placeholder="e.g. 11.0" value="${E((sel.anc && sel.anc.hb) || '')}" />
+                  <span class="small muted" style="font-size:.72rem;">${isHi ? "< 9.0 g/dl होने पर गंभीर एनीमिया चेतावनी" : "< 9.0 g/dl triggers Severe Anemia warning"}</span>
+                </div>
+                <div class="field">
+                  <label>4. ${isHi ? "शिशु की हलचल (Fetal Movements)" : "Fetal Movements"} *</label>
+                  <select id="asha_fetal">
+                    <option value="active" ${sel.anc && sel.anc.fetalMovements === 'Active' ? 'selected' : ''}>${isHi ? "सक्रिय (Active / Normal)" : "Active / Normal"}</option>
+                    <option value="reduced" ${sel.anc && sel.anc.fetalMovements === 'Reduced' ? 'selected' : ''}>${isHi ? "कम हलचल (Reduced — चेतावनी)" : "Reduced (Warning)"}</option>
+                    <option value="absent" ${sel.anc && sel.anc.fetalMovements === 'Absent' ? 'selected' : ''}>${isHi ? "अनुपस्थित (Absent — आपातकाल)" : "Absent (Critical)"}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field mt" style="margin-top:10px;">
+                <label>5. ${isHi ? "मुख्य शिकायत / लक्षण (Observations / Symptoms)" : "Chief Complaint / Observations"}</label>
+                <textarea id="asha_complaint" rows="2" placeholder="${isHi ? 'e.g. सिरदर्द, चक्कर, पैरों में सूजन, रक्तस्राव या पानी छूटना...' : 'e.g. Headache, dizziness, ankle swelling, any bleeding or leaking fluid...'}">${E((sel.anc && (sel.anc.upadrava || []).join(', ')) || '')}</textarea>
+              </div>
+
+              <div class="row between mt" style="align-items:center;margin-top:14px;">
+                <span class="small muted" style="font-size:.75rem;">🔒 ${isHi ? "डेटा स्थानीय व 8-अक्षरी कोड से सुरक्षित" : "Encrypted & synced via 8-char Share Code"}</span>
+                <button class="btn btn-ok" data-action="save-asha-visit" data-id="${sel.id}">
+                  💾 ${isHi ? "गृह भेंट सहेजें (Save Visit)" : "Save Home Visit"}
+                </button>
+              </div>
+            </div>
+
+            <!-- Classical Dietary Instructions for ASHA to Counsel Mother -->
+            ${selCtx ? `
+              <div class="mt" style="margin-top:18px;background:var(--glass2);border-radius:12px;padding:14px;border:1px solid var(--line);">
+                <h4 style="font-size:.95rem;margin-bottom:6px;color:var(--emerald);">📖 ${isHi ? "माता को समझाने हेतु मासिक आयुर्वेदिक आहार (Charaka & Sushruta)" : "Masanumasika Nutrition Guidelines for Counseling"} (मास ${selCtx.month})</h4>
+                <div class="grid g2" style="font-size:.84rem;line-height:1.5;">
+                  <div>
+                    <b>✅ ${isHi ? "पथ्य (यह खाने की सलाह दें):" : "Recommended (Pathya):"}</b>
+                    <ul style="margin:4px 0 0 16px;padding:0;">
+                      ${KB.getMonth(selCtx.month).pathya.slice(0, 3).map(p => `<li>${E(p)}</li>`).join("")}
+                    </ul>
+                  </div>
+                  <div>
+                    <b>⛔ ${isHi ? "अपथ्य (इनसे बचने को कहें):" : "Strictly Avoid (Apathya):"}</b>
+                    <ul style="margin:4px 0 0 16px;padding:0;">
+                      ${KB.getMonth(selCtx.month).avoid.slice(0, 3).map(a => `<li>${E(a)}</li>`).join("")}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Recent Visit History -->
+            ${sel.ashaVisits && sel.ashaVisits.length > 0 ? `
+              <div class="mt" style="margin-top:18px;">
+                <h4 style="font-size:.95rem;margin-bottom:8px;">📋 ${isHi ? "पूर्व गृह भेंट इतिहास" : "Past Home Visits Log"} (${sel.ashaVisits.length})</h4>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  ${sel.ashaVisits.map(v => `
+                    <div style="padding:10px;background:var(--glass2);border-radius:8px;font-size:.82rem;border:1px solid var(--line);">
+                      <div class="row between">
+                        <b>📅 ${fmtDate(v.date)}</b>
+                        <span class="muted">BP: ${E(v.bp || "—")} · Hb: ${E(v.hb || "—")} · Wt: ${E(v.weight || "—")} kg</span>
+                      </div>
+                      ${v.complaint ? `<p class="mb0 muted small" style="margin-top:4px;">💬 ${E(v.complaint)}</p>` : ''}
+                      ${v.referral ? `<p class="mb0 small" style="margin-top:4px;color:#e11d48;font-weight:700;">🚨 ${E(v.referral)}</p>` : ''}
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            ` : ''}
+          ` : `
+            <div style="text-align:center;padding:48px 20px;">
+              <div style="font-size:3rem;margin-bottom:12px;">👩‍⚕️</div>
+              <h3>${isHi ? "कोई गर्भवती चयनित नहीं" : "No Mother Selected"}</h3>
+              <p class="muted small">${isHi ? "बाईं ओर सूची में से किसी माता का चयन करें अथवा नई प्रविष्टि दर्ज करें।" : "Select a mother from the directory on the left or register a new village mother to record home visits."}</p>
+            </div>
+          `}
+        </main>
+      </div>
+    </section>
+    `;
   }
 
   /* ------------------------------ CLINICIAN WORKSTATION ------------------------------ */
@@ -1576,12 +2260,24 @@
       if (S.role === "clinician") {
         const docName = S.clinician.name || (user && user.displayName) || "Doctor";
         $("#roleChip").textContent = `🩺 Dr. ${docName.replace(/^Dr\.\s*/i, "")}`;
+      } else if (S.role === "asha") {
+        const ashaName = S.asha.name || (user && user.displayName) || "ASHA";
+        $("#roleChip").textContent = `👩‍⚕️ ASHA: ${ashaName}`;
       } else {
-        $("#roleChip").textContent = "🤰 Mother / Patient";
+        $("#roleChip").textContent = "🤰 " + (S.lang === "hi" ? "गर्भिणी / माता" : "Mother / Patient");
       }
+      
+      const langBtn = $("#langBtn");
+      if (langBtn) langBtn.textContent = S.lang === "hi" ? "English (EN)" : "हिन्दी (HI)";
+      const switchBtn = $("#switchRole");
+      if (switchBtn) switchBtn.textContent = t("switchRole");
+      const brandSub = $("#brandSubtitle");
+      if (brandSub) brandSub.textContent = S.lang === "hi" ? "एआई स्वास्थ्य साथी · चरक व सुश्रुत" : "AI Care Companion · Charaka & Sushruta";
     }
     if (S.role === "clinician") {
       app.innerHTML = await viewClinician();
+    } else if (S.role === "asha") {
+      app.innerHTML = await viewAsha();
     } else if (S.role === "patient") {
       const ctx = await currentPatientCtx();
       if (ctx) {
@@ -1618,6 +2314,272 @@
   };
 
   const H = {
+    /* Language toggle */
+    "toggle-lang"() {
+      S.lang = S.lang === "hi" ? "en" : "hi";
+      localStorage.setItem("ayur_lang", S.lang);
+      render();
+      toast(S.lang === "hi" ? "भाषा बदलकर हिन्दी की गई" : "Language switched to English");
+    },
+
+    /* Judge Demo Hub & Presets */
+    "open-judge-demo": openJudgeDemoModal,
+
+    async "load-demo-mother-5"() {
+      DB.setSelfProfile({
+        name: "Priya Sharma",
+        lmp: (() => { const d = new Date(); d.setDate(d.getDate() - 140); return d.toISOString().slice(0, 10); })(),
+        location: "Pune, Maharashtra",
+        ritu: "grishma",
+        complaints: ["chhardi", "katishoola"]
+      });
+      S.role = "patient";
+      S.patientId = null;
+      S.tab = "overview";
+      S.demoActive = true;
+      closeModal();
+      await render();
+      window.scrollTo(0, 0);
+      toast(S.lang === "hi" ? "माह ५ डेमो लोड हुआ (चरक संहिता · ग्रीष्म ऋतु)" : "Loaded Month 5 Demo (Charaka Samhita · Grishma)");
+    },
+
+    async "load-demo-mother-8"() {
+      DB.setSelfProfile({
+        name: "Meera Patel",
+        lmp: (() => { const d = new Date(); d.setDate(d.getDate() - 238); return d.toISOString().slice(0, 10); })(),
+        location: "Ahmedabad, Gujarat",
+        ritu: "sharad",
+        complaints: ["vibandha", "shopha"]
+      });
+      S.role = "patient";
+      S.patientId = null;
+      S.tab = "overview";
+      S.demoActive = true;
+      closeModal();
+      await render();
+      window.scrollTo(0, 0);
+      toast(S.lang === "hi" ? "माह ८ डेमो लोड हुआ (सुश्रुत संहिता · अस्थिर ओज)" : "Loaded Month 8 Demo (Sushruta Samhita · Ojas)");
+    },
+
+    async "load-demo-sutika"() {
+      DB.setSelfProfile({
+        name: "Anjali Gupta",
+        lmp: (() => { const d = new Date(); d.setDate(d.getDate() - 292); return d.toISOString().slice(0, 10); })(),
+        location: "Indore, MP",
+        ritu: "auto",
+        complaints: []
+      });
+      S.role = "patient";
+      S.patientId = null;
+      S.tab = "sutika";
+      S.demoActive = true;
+      closeModal();
+      await render();
+      window.scrollTo(0, 0);
+      toast(S.lang === "hi" ? "सूतिका परिचर्या डेमो लोड हुआ (प्रसवोपरांत देखभाल)" : "Loaded Sutika Paricharya Demo (Postnatal Care)");
+    },
+
+    async "load-demo-doctor"() {
+      S.role = "clinician";
+      S.clinician.name = "Dr. Ananya Sharma (BAMS, MS Ayu)";
+      S.clinician.clinicName = "AyurGarbha Matritva Clinic";
+      S.clinician.clinicAddress = "Shivaji Nagar, Pune";
+      S.clinician.clinicContact = "+91 98230 12345";
+      S.demoActive = true;
+      closeModal();
+      await render();
+      window.scrollTo(0, 0);
+      toast(S.lang === "hi" ? "डॉक्टर कार्यस्थल डेमो सक्रिय" : "Loaded Doctor Clinical Workstation");
+    },
+
+    async "load-demo-asha"() {
+      S.role = "asha";
+      S.asha.name = "Sunita Devi (ASHA Facilitator)";
+      S.asha.village = "Rampur Sub-Center / PHC";
+      S.ashaPatientId = "demo_asha_red";
+      S.demoActive = true;
+      closeModal();
+      await render();
+      window.scrollTo(0, 0);
+      toast(S.lang === "hi" ? "आशा कार्यकर्ता जोखिम ट्राइएज सक्रिय" : "Loaded ASHA Community Risk Triage");
+    },
+
+    /* Quick Demos from Gateway */
+    async "quick-doctor-demo"() {
+      S.role = "clinician";
+      S.clinician.name = "Dr. Ananya Sharma (BAMS, MS Ayu)";
+      S.clinician.clinicName = "AyurGarbha Matritva Clinic";
+      S.demoActive = true;
+      await render();
+      window.scrollTo(0, 0);
+      toast("Doctor Demo Mode active");
+    },
+
+    async "quick-asha-demo"() {
+      S.role = "asha";
+      S.asha.name = "Sunita Devi (ASHA Facilitator)";
+      S.asha.village = "Rampur Sub-Center / PHC";
+      S.ashaPatientId = "demo_asha_red";
+      S.demoActive = true;
+      await render();
+      window.scrollTo(0, 0);
+      toast("ASHA Demo Mode active");
+    },
+
+    /* ASHA Actions */
+    "asha-filter"(el) {
+      S.ashaFilter = el.dataset.v || "all";
+      render();
+    },
+
+    "sel-asha-patient"(el) {
+      S.ashaPatientId = el.dataset.id;
+      render();
+    },
+
+    async "save-asha-visit"(el) {
+      const pid = el.dataset.id || S.ashaPatientId;
+      if (!pid) return;
+      const bp = ($("#asha_bp") && $("#asha_bp").value.trim()) || "";
+      const wt = ($("#asha_wt") && $("#asha_wt").value.trim()) || "";
+      const hb = ($("#asha_hb") && $("#asha_hb").value.trim()) || "";
+      const fetal = ($("#asha_fetal") && $("#asha_fetal").value) || "active";
+      const complaint = ($("#asha_complaint") && $("#asha_complaint").value.trim()) || "";
+
+      // Evaluate red flags
+      const rf = evaluateRedFlags({ text: complaint, bp, hb, complaints: [complaint] });
+      let referral = "";
+      if (rf.risk === "red") {
+        referral = "🚨 Immediate referral to CHC / District Hospital: " + rf.alerts.map(a => a.en).join("; ");
+      } else if (rf.risk === "yellow") {
+        referral = "⚠️ Close clinical monitor: repeat vitals in 3 days.";
+      }
+
+      // If sample patient, update in memory
+      const sample = SAMPLE_ASHA_PATIENTS.find(p => p.id === pid);
+      if (sample) {
+        sample.anc = sample.anc || {};
+        if (bp) sample.anc.bp = bp;
+        if (wt) sample.anc.weight = wt;
+        if (hb) sample.anc.hb = hb;
+        if (fetal) sample.anc.fetalMovements = fetal;
+        if (complaint) sample.anc.upadrava = [complaint];
+        sample.ashaVisits.unshift({
+          id: "av_" + Date.now(),
+          date: todayStr(),
+          bp, weight: wt, hb, fetalMovements: fetal, complaint, referral
+        });
+      } else {
+        try {
+          await DB.saveAshaVisit(pid, {
+            bp, weight: wt, hb, fetalMovements: fetal, complaint, referral
+          });
+        } catch (e) {
+          console.warn("Save visit local fallback:", e);
+        }
+      }
+
+      render();
+      if (rf.risk === "red") {
+        alert("🚨 उच्च जोखिम चेतावनी (Urgent Referral Warning):\n" + rf.alerts.map(a => (S.lang === "hi" ? a.hi : a.en)).join("\n") + "\n\nतुरंत नज़दीकी स्वास्थ्य केंद्र रेफर करें।");
+      } else {
+        toast(S.lang === "hi" ? "गृह भेंट रिकॉर्ड सफलतापूर्वक सहेजा गया।" : "Home visit recorded successfully.");
+      }
+    },
+
+    "new-asha-patient"() {
+      const isHi = S.lang === "hi";
+      openModal(`
+        <div class="row between mb0">
+          <h3>👩‍⚕️ ${isHi ? "नई गर्भवती महिला पंजीकरण (ASHA)" : "Register Village Mother"}</h3>
+        </div>
+        <div class="field mt"><label>${isHi ? "माता का नाम *" : "Mother's Full Name *"}</label><input id="ap_name" placeholder="e.g. सुनीता बाई (Sunita Bai)" /></div>
+        <div class="grid g2">
+          <div class="field"><label>${isHi ? "आयु (वर्ष)" : "Age (Years)"}</label><input type="number" id="ap_age" placeholder="24" /></div>
+          <div class="field"><label>${isHi ? "फ़ोन नंबर" : "Phone Number"}</label><input id="ap_phone" placeholder="+91 98765 00000" /></div>
+        </div>
+        <div class="grid g2">
+          <div class="field"><label>${isHi ? "अंतिम मासिक धर्म (LMP) *" : "LMP Date *"}</label><input type="date" id="ap_lmp" max="${todayStr()}" /></div>
+          <div class="field"><label>${isHi ? "गाँव / वार्ड" : "Village / Ward"}</label><input id="ap_loc" placeholder="e.g. Rampur, Ward 3" /></div>
+        </div>
+        <div class="row between mt">
+          <button class="btn btn-ghost" data-action="close-modal">${isHi ? "रद्द करें" : "Cancel"}</button>
+          <button class="btn btn-ok" data-action="save-new-asha-patient">${isHi ? "पंजीकृत करें" : "Save Mother"}</button>
+        </div>
+      `);
+    },
+
+    async "save-new-asha-patient"() {
+      const name = ($("#ap_name") && $("#ap_name").value.trim()) || "Mother";
+      const lmp = ($("#ap_lmp") && $("#ap_lmp").value) || todayStr();
+      const age = parseInt($("#ap_age") && $("#ap_age").value, 10) || 24;
+      const phone = ($("#ap_phone") && $("#ap_phone").value.trim()) || "";
+      const loc = ($("#ap_loc") && $("#ap_loc").value.trim()) || "Village";
+
+      const user = DB.getCurrentUser();
+      const ashaUid = S.asha.uid || (user && !user.isAnonymous ? user.uid : null);
+      const code = await DB.generateLinkCode();
+
+      const newRec = {
+        name, lmp, age, phone, location: loc,
+        ashaUid,
+        linkCode: code,
+        shareCode: code,
+        anc: { G: 1, P: 0, L: 0, A: 0, bp: "120/80", hb: "11.5", weight: "50", fetalMovements: "Active", upadrava: [] },
+        ashaVisits: []
+      };
+
+      const saved = await DB.savePatient(newRec);
+      SAMPLE_ASHA_PATIENTS.unshift(saved);
+      S.ashaPatientId = saved.id;
+      closeModal();
+      render();
+      toast(S.lang === "hi" ? "नई गर्भवती महिला सफलतापूर्वक पंजीकृत!" : "New village mother registered!");
+    },
+
+    async "asha-google-login"() {
+      try {
+        const u = await DB.signInWithGoogle();
+        if (u) {
+          S.asha.uid = u.uid;
+          S.asha.name = u.displayName || "ASHA Worker";
+          S.asha.email = u.email;
+          S.role = "asha";
+          render();
+          toast("ASHA Google login successful");
+        }
+      } catch (e) {
+        toast("Login note: " + (e.message || e), true);
+        // Fallback to demo mode
+        S.role = "asha";
+        render();
+      }
+    },
+
+    "asha-sign-out"() {
+      DB.signOut();
+      S.role = null;
+      render();
+      toast("Signed out");
+    },
+
+    /* Privacy Consent & Erasure */
+    "open-consent-modal": openConsentModal,
+
+    "delete-my-data"() {
+      const isHi = S.lang === "hi";
+      if (!confirm(isHi ? "क्या आप वाकई अपना समस्त डेटा मिटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।" : "Are you sure you want to delete all stored health records? This cannot be undone.")) return;
+      DB.deleteMyData();
+      DB.clearSession();
+      S.role = null;
+      S.patientId = null;
+      S.selId = null;
+      S.ashaPatientId = null;
+      closeModal();
+      render();
+      toast(isHi ? "समस्त डेटा सफलतापूर्वक मिटा दिया गया।" : "All local data deleted successfully.");
+    },
+
     home() {
       if (!S.role) return;
       S.tab = "overview";

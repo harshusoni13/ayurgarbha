@@ -28,7 +28,9 @@
     session: NS + "session",
     selfProfile: NS + "selfProfile",
     seeded: NS + "demoSeeded",
-    doctorProfile: NS + "doctorProfile:"
+    doctorProfile: NS + "doctorProfile:",
+    ashaProfile: NS + "ashaProfile:",
+    consent: NS + "consent"
   };
 
   // ---- Tiny local cache helpers ----
@@ -130,7 +132,7 @@
       });
 
       isFirestoreReady = true;
-      setupRealtimeListeners();
+      // Real-time listeners are strictly scoped upon authenticated sign-in
     } catch (err) {
       console.warn("AyurGarbha: Firebase initialization fallback to localStorage:", err.message || err);
     }
@@ -306,18 +308,16 @@
       const c = String(code).trim().toUpperCase();
       if (isFirestoreReady && firestore) {
         try {
-          const snap = await firestore
-            .collection("patients")
-            .where("linkCode", "==", c)
-            .limit(1)
-            .get();
+          const doc = await firestore.collection("shares").doc(c).get();
+          if (doc.exists) {
+            const data = Object.assign({ id: doc.id }, doc.data());
+            return data;
+          }
+          // Secondary query on patients collection
+          const snap = await firestore.collection("patients").where("linkCode", "==", c).limit(1).get();
           if (!snap.empty) {
             const d = snap.docs[0];
-            const data = Object.assign({ id: d.id }, d.data());
-            const all = read(K.patients, {});
-            all[data.id] = data;
-            write(K.patients, all);
-            return data;
+            return Object.assign({ id: d.id }, d.data());
           }
         } catch (e) {
           console.info("Firestore getPatientByLinkCode fallback:", e.message || e);
@@ -325,34 +325,85 @@
       }
       return (
         Object.values(read(K.patients, {})).find(
-          (p) => (p.linkCode || "").toUpperCase() === c
+          (p) => ((p.linkCode || p.shareCode || "").toUpperCase() === c)
         ) || null
       );
     },
 
+    buildPatientSafeShare(patient) {
+      if (!patient) return null;
+      const code = (patient.linkCode || patient.shareCode || "").toUpperCase();
+      return {
+        id: patient.id,
+        linkCode: code,
+        shareCode: code,
+        name: patient.name,
+        age: patient.age,
+        phone: patient.phone,
+        lmp: patient.lmp,
+        location: patient.location,
+        clinician: patient.clinician || patient.doctorName || "Doctor",
+        doctorName: patient.doctorName || patient.clinician || "Doctor",
+        clinicName: patient.clinicName || "",
+        clinicAddress: patient.clinicAddress || "",
+        clinicContact: patient.clinicContact || "",
+        updatedAt: patient.updatedAt || Date.now(),
+        // Safe ANC vitals (EXCLUDING private clinician notes)
+        anc: {
+          G: patient.anc ? patient.anc.G : 1,
+          P: patient.anc ? patient.anc.P : 0,
+          L: patient.anc ? patient.anc.L : 0,
+          A: patient.anc ? patient.anc.A : 0,
+          bp: (patient.anc && patient.anc.bp) || "",
+          pulse: (patient.anc && patient.anc.pulse) || "",
+          weight: (patient.anc && patient.anc.weight) || "",
+          hb: (patient.anc && patient.anc.hb) || "",
+          bloodGroup: (patient.anc && patient.anc.bloodGroup) || "",
+          pallor: (patient.anc && patient.anc.pallor) || "None",
+          edema: (patient.anc && patient.anc.edema) || "None",
+          urineAlbumin: (patient.anc && patient.anc.urineAlbumin) || "Nil",
+          fundalHeight: (patient.anc && patient.anc.fundalHeight) || "",
+          fhr: (patient.anc && patient.anc.fhr) || "",
+          fetalMovements: (patient.anc && patient.anc.fetalMovements) || "Normal",
+          agni: (patient.anc && patient.anc.agni) || "Samagni",
+          koshtha: (patient.anc && patient.anc.koshtha) || "Madhyama",
+          upadrava: (patient.anc && patient.anc.upadrava) || []
+        },
+        followUps: (patient.followUps || []).map((f) => ({
+          month: f.month,
+          date: f.date,
+          weight: f.weight,
+          bp: f.bp,
+          hb: f.hb,
+          formulations: f.formulations,
+          advice: f.advice,
+          protocol: f.protocol,
+          nextFollowUp: f.nextFollowUp
+        }))
+      };
+    },
+
     /**
-     * Generates a unique 6-digit Link Code: AG-XXXX (e.g. AG-1084).
-     * Verifies uniqueness against Firestore and local cache.
+     * Generates a secure 8-character Share Code: AG-XXXXXX (e.g. AG-K9M2P4).
      */
     async generateLinkCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let code;
       let isUnique = false;
       let attempts = 0;
       while (!isUnique && attempts < 25) {
         attempts++;
-        code = "AG-" + String(1000 + Math.floor(Math.random() * 9000));
-        const existing = await this.getPatientByLinkCode(code);
-        if (!existing) {
-          isUnique = true;
+        let r = "";
+        for (let i = 0; i < 6; i++) {
+          r += chars.charAt(Math.floor(Math.random() * chars.length));
         }
+        code = "AG-" + r;
+        const existing = await this.getPatientByLinkCode(code);
+        if (!existing) isUnique = true;
       }
-      return code || "AG-" + String(1000 + Math.floor(Math.random() * 9000));
+      return code || "AG-K" + Math.floor(10000 + Math.random() * 90000);
     },
 
-    /**
-     * Create / Save patient record. Writes to Firestore `patients/{id}`
-     * and synchronizes local storage.
-     */
     async savePatient(data) {
       const id = data.id || uid("p_");
       const linkCode = data.linkCode || (await this.generateLinkCode());
@@ -382,6 +433,8 @@
       if (isFirestoreReady && firestore) {
         try {
           await firestore.collection("patients").doc(id).set(rec, { merge: true });
+          const safeShare = this.buildPatientSafeShare(rec);
+          await firestore.collection("shares").doc(linkCode.toUpperCase()).set(safeShare, { merge: true });
         } catch (e) {
           console.info("Firestore savePatient queued/cached:", e.message || e);
         }
@@ -515,7 +568,12 @@
       if (!id) return;
       if (isFirestoreReady && firestore) {
         try {
-          await firestore.collection("patients").doc(id).delete();
+          const p = await this.getPatient(id);
+        const code = p ? (p.linkCode || p.shareCode) : null;
+        await firestore.collection("patients").doc(id).delete();
+        if (code) {
+          await firestore.collection("shares").doc(code.toUpperCase()).delete().catch(() => {});
+        }
           const fuSnap = await firestore
             .collection("followups")
             .where("patientId", "==", id)
@@ -560,6 +618,59 @@
     onAuthStateChanged(fn) {
       if (!auth) return () => {};
       return auth.onAuthStateChanged(fn);
+    },
+
+
+    /* ---------- DPDP Act 2023: Consent & Data Privacy ---------- */
+    hasConsent() {
+      return Boolean(read(K.consent, false));
+    },
+
+    setConsent(val) {
+      write(K.consent, Boolean(val));
+      emit();
+    },
+
+    deleteMyData() {
+      try {
+        const s = getStorage();
+        if (s) {
+          const keys = [];
+          for (let i = 0; i < s.length; i++) {
+            const k = s.key(i);
+            if (k && k.indexOf(NS) === 0) keys.push(k);
+          }
+          keys.forEach((k) => s.removeItem(k));
+        }
+      } catch (e) {
+        console.warn("Delete data notice:", e);
+      }
+      emit();
+    },
+
+    /* ---------- ASHA Worker Field Support ---------- */
+    async saveAshaVisit(patientId, visit) {
+      const p = await this.getPatient(patientId);
+      if (!p) throw new Error("Patient not found: " + patientId);
+      const now = Date.now();
+      const visitRec = Object.assign(
+        {
+          id: uid("av_"),
+          patientId,
+          date: new Date().toISOString().slice(0, 10),
+          createdAt: now
+        },
+        visit
+      );
+      const visits = (p.ashaVisits || []).concat([visitRec]);
+      const anc = Object.assign({}, p.anc || defaultAnc());
+      if (visit.bp) anc.bp = visit.bp;
+      if (visit.weight) anc.weight = visit.weight;
+      if (visit.hb) anc.hb = visit.hb;
+      if (visit.fetalMovements) anc.fetalMovements = visit.fetalMovements;
+      if (visit.complaint) anc.upadrava = Array.from(new Set((anc.upadrava || []).concat([visit.complaint])));
+
+      return this.updatePatient(patientId, { ashaVisits: visits, anc, lastAshaVisit: now });
     },
 
     /* ---------- Doctor & Clinic Profile (Firestore + Local Sync) ---------- */
@@ -622,6 +733,7 @@
     getSelfProfile() {
       return read(K.selfProfile, null);
     },
+    saveSelfProfile(p) { return this.setSelfProfile(p); },
     setSelfProfile(p) {
       write(K.selfProfile, p);
       emit();
