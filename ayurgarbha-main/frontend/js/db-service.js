@@ -125,6 +125,17 @@
       emit();
     },
 
+    getWaterCount(dateStr) {
+      const key = NS + "water:" + (dateStr || new Date().toISOString().slice(0, 10));
+      return Math.max(0, Number(read(key, 0)) || 0);
+    },
+
+    setWaterCount(dateStr, count) {
+      const key = NS + "water:" + (dateStr || new Date().toISOString().slice(0, 10));
+      write(key, Math.max(0, Math.min(20, Number(count) || 0)));
+      emit();
+    },
+
     async resetAll() {
       this.deleteMyData();
     },
@@ -161,6 +172,76 @@
         if (month != null && r.month != null && Number(r.month) !== Number(month)) return false;
         return true;
       });
+    },
+
+    /* ---------- Institutional Suprajaa Diet Table Loader ---------- */
+    _suprajaa: [],
+    _suprajaaLoaded: false,
+    setSuprajaaRecords(list) {
+      this._suprajaa = Array.isArray(list) ? list : [];
+      this._suprajaaLoaded = true;
+    },
+    async loadSuprajaaRecords() {
+      if (this._suprajaaLoaded && this._suprajaa.length) return this._suprajaa;
+      const urls = ["data/records_suprajaa.json", "../data/records_suprajaa.json"];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            this.setSuprajaaRecords(data);
+            emit();
+            return this._suprajaa;
+          }
+        } catch (e) {
+          /* try next */
+        }
+      }
+      return this._suprajaa;
+    },
+    getSuprajaaByMonth(month) {
+      return this._suprajaa.filter(
+        (r) =>
+          r &&
+          r.source_type === "institutional" &&
+          r.text_verified === true &&
+          r.permission_obtained === true &&
+          Number(r.month) === Number(month)
+      );
+    },
+
+    /* ---------- Concerns ("तुरंत समाधान") Loader ---------- */
+    _concerns: { sources: [], items: [] },
+    _concernsLoaded: false,
+    setConcerns(data) {
+      if (data && Array.isArray(data.items)) {
+        this._concerns = { sources: data.sources || [], items: data.items };
+      }
+      this._concernsLoaded = true;
+    },
+    async loadConcerns() {
+      if (this._concernsLoaded && this._concerns.items.length) return this._concerns;
+      const urls = ["data/concerns.json", "../data/concerns.json"];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            this.setConcerns(data);
+            emit();
+            return this._concerns;
+          }
+        } catch (e) {
+          /* try next */
+        }
+      }
+      return this._concerns;
+    },
+    getConcerns() {
+      return this._concerns.items || [];
+    },
+    getConcernSources() {
+      return this._concerns.sources || [];
     }
   };
 

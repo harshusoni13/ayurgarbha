@@ -221,21 +221,15 @@ table.t { width: 100%; border-collapse: collapse; font-size: .85rem; } table.t t
   color: var(--muted);
 }
 
-/* Deterministic Red-Flag Emergency Banner */
+/* Deterministic Red-Flag Emergency Banner (calm, steady — no scary pulsing) */
 .emergency-banner-critical {
-  background: linear-gradient(135deg, rgba(190, 18, 60, 0.25), rgba(159, 18, 57, 0.15));
+  background: linear-gradient(135deg, rgba(190, 18, 60, 0.14), rgba(159, 18, 57, 0.08));
   border: 2px solid var(--crimson);
-  box-shadow: 0 0 20px rgba(225, 29, 72, 0.3);
   border-radius: 14px;
   padding: 16px 18px;
   margin: 14px 0;
-  animation: pulseCritical 2s infinite ease-in-out;
   box-sizing: border-box;
   width: 100%;
-}
-@keyframes pulseCritical {
-  0%, 100% { border-color: var(--crimson); box-shadow: 0 0 16px rgba(225, 29, 72, 0.25); }
-  50% { border-color: #fda4af; box-shadow: 0 0 26px rgba(225, 29, 72, 0.45); }
 }
 .emergency-banner-title {
   display: flex;
@@ -810,4 +804,279 @@ input, select, textarea {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* =====================================================================
+ * P5: Lotus Progress, Baby Touch Heart, Water Glass, Breathing Lotus,
+ *     Smooth Shloka Slide, Thinking Lotus & Gentle Page Transition
+ * ===================================================================== */
+.page-enter {
+  animation: pageFadeSlide 0.28s ease-out both;
+}
+@keyframes pageFadeSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 9-Petal Lotus Progress */
+.lotus-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.lotus-progress-svg {
+  width: 112px;
+  height: 92px;
+  flex-shrink: 0;
+}
+.lp-petal {
+  fill: #e2e8f0;
+  stroke: #94a3b8;
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+  transform: scale(0.76);
+  opacity: 0.45;
+  transition: transform 0.45s ease, fill 0.45s ease, opacity 0.45s ease;
+}
+.lp-petal.bloomed {
+  fill: #fb7185;
+  stroke: #be123c;
+  transform: scale(1);
+  opacity: 0.95;
+}
+.lp-petal.current {
+  fill: #f59e0b;
+  stroke: #b45309;
+  transform: scale(1.06);
+  opacity: 1;
+}
+
+/* Touch Heart */
+.touch-heart {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+.touch-heart.active {
+  animation: heartFloat 1.1s ease-out forwards;
+}
+@keyframes heartFloat {
+  0% { opacity: 0; transform: translateY(6px) scale(0.5); }
+  30% { opacity: 1; transform: translateY(-6px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-24px) scale(0.95); }
+}
+
+/* Water Glass */
+.water-widget {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.water-svg {
+  width: 66px;
+  height: 84px;
+  flex-shrink: 0;
+}
+.water-fill-rect {
+  transition: y 0.45s cubic-bezier(0.22, 1, 0.36, 1), height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Breathing Lotus (4s inhale, 6s exhale) */
+.breath-lotus-svg {
+  width: 140px;
+  height: 140px;
+  transition: transform 4s ease-in-out;
+  transform-origin: 50% 55%;
+  margin: 8px 0;
+}
+.breath-lotus-svg.inhale {
+  transform: scale(1.22);
+  transition-duration: 4s;
+}
+.breath-lotus-svg.exhale {
+  transform: scale(0.86);
+  transition-duration: 6s;
+}
+
+/* Thinking Lotus Loader (Ask) */
+.lotus-loader-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.lotus-loader-svg {
+  width: 34px;
+  height: 34px;
+  animation: lotusThink 1.8s ease-in-out infinite;
+}
+@keyframes lotusThink {
+  0%, 100% { transform: scale(0.9) rotate(-4deg); opacity: 0.75; }
+  50% { transform: scale(1.12) rotate(4deg); opacity: 1; }
+}
+
+/* Smooth Shloka Slide-Open */
+.shloka-body {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+}
+.shloka-body.open {
+  max-height: 600px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .touch-heart.active,
+  .lotus-loader-svg {
+    animation: none !important;
+  }
+  .lp-petal,
+  .water-fill-rect,
+  .breath-lotus-svg,
+  .shloka-body {
+    transition: none !important;
+  }
+}
+
+/* =====================================================================
+ * P7: Suprajaa Institutional Monthly Diet Card
+ * ===================================================================== */
+.suprajaa-rows {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.sup-row {
+  display: grid;
+  grid-template-columns: 165px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+.sup-slot-0 { background: #fffbeb; border-color: #fde68a; }
+.sup-slot-1 { background: #fef2f2; border-color: #fecaca; }
+.sup-slot-2 { background: #ecfdf5; border-color: #a7f3d0; }
+.sup-slot-3 { background: #f0f9ff; border-color: #bae6fd; }
+.sup-slot-4 { background: #faf5ff; border-color: #e9d5ff; }
+.sup-slot-5 { background: #fff7ed; border-color: #fed7aa; }
+.sup-slot-6 { background: #f0fdfa; border-color: #99f6e4; }
+.sup-slot-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.sup-source-line {
+  font-size: 11px;
+  color: #64748b;
+  margin: 10px 0 0;
+}
+@media (max-width: 640px) {
+  .sup-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+
+/* =====================================================================
+ * P8: Quick Solutions ("तुरंत समाधान"), AUM Breathing & 3 Activities
+ * ===================================================================== */
+.tel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: var(--emerald-d);
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin: 0 2px;
+}
+.tel-chip:hover {
+  background: var(--emerald);
+}
+.aum-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 10px 0;
+}
+.aum-letter {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--muted);
+  opacity: 0.35;
+  transition: transform 0.35s ease, color 0.35s ease, opacity 0.35s ease;
+}
+.aum-letter.lit {
+  color: var(--amber);
+  opacity: 1;
+  transform: scale(1.28);
+}
+.daily-acts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.daily-act-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--glass2);
+  border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .daily-acts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* =====================================================================
+ * P10 — Modern Perspective (WHO 2016) Separate Box
+ * ===================================================================== */
+.who-box {
+  border: 1.5px solid rgba(30, 96, 145, 0.28);
+  background: rgba(240, 247, 252, 0.72);
+  padding: 16px;
+  border-radius: 14px;
+}
+.who-src-chip {
+  cursor: pointer;
+  background: rgba(30, 96, 145, 0.12);
+  color: #164e78;
+  border: 1px solid rgba(30, 96, 145, 0.28);
+  font-weight: 700;
+}
+.who-src-chip:hover {
+  background: rgba(30, 96, 145, 0.2);
+}
+.who-box-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+.who-box-list li {
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+.who-diff-note {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px dashed rgba(30, 96, 145, 0.32);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text);
 }

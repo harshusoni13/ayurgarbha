@@ -180,6 +180,15 @@
     epdsResult: null,
     breathingActive: false,
     breathingTimer: null,
+    breathTickTimer: null,
+    breathMins: 1,
+    breathPace: "medium", // slow | medium | fast
+    breathOm: false,
+    breathTone: false,
+    breathEndAt: null,
+    audioCtx: null,
+    concernGroup: "physical", // physical | emotional | mental
+    concernId: "CON-1",
     consentChecked: false,
     formInputMode: "lmp",
     splashTimer: null,
@@ -601,10 +610,129 @@
             <path d="M96,125 C89,129 90,139 98,140 C105,140 107,131 101,125 Z" fill="#fda4af" stroke="#be123c" stroke-width="1.2"/>
             <path d="M92,135 C87,136 86,132 89,129" stroke="#f5d0b5" stroke-width="3" fill="none" stroke-linecap="round"/>
           </g>
+          <!-- Heart Shape on Touch -->
+          <path id="touchHeart" class="touch-heart" d="M98,104 C98,101 94,99 92,101 C90,103 92,107 98,111 C104,107 106,103 104,101 C102,99 98,101 98,104 Z" fill="#e11d48"/>
         </g>
       </svg>
-      <div id="kickMsg" class="kick-msg">${isHi ? "👆 गर्भ पर टैप करें" : "👆 Tap womb gently"}</div>
+      <div id="kickMsg" class="kick-msg">${isHi ? "👆 गर्भ पर स्पर्श करें" : "👆 Touch gently"}</div>
       <p class="illus-caption">${isHi ? "यह समझने के लिए सरलीकृत चित्र है।" : "Simplified educational illustration."}</p>
+    </div>`;
+  }
+
+  function lotusProgressSVG(month) {
+    const m = Math.max(1, Math.min(9, Number(month) || 1));
+    const isHi = S.lang === "hi";
+    const petals = [
+      "M60,72 C42,68 24,52 20,34 C38,38 50,52 60,72 Z",
+      "M60,72 C78,68 96,52 100,34 C82,38 70,52 60,72 Z",
+      "M60,72 C44,62 32,42 36,22 C50,34 56,52 60,72 Z",
+      "M60,72 C76,62 88,42 84,22 C70,34 64,52 60,72 Z",
+      "M60,72 C48,54 46,32 52,14 C58,32 60,52 60,72 Z",
+      "M60,72 C72,54 74,32 68,14 C62,32 60,52 60,72 Z",
+      "M60,72 C52,48 54,24 60,8 C66,24 68,48 60,72 Z",
+      "M60,74 C40,76 22,70 14,58 C30,60 46,66 60,74 Z",
+      "M60,74 C80,76 98,70 106,58 C90,60 74,66 60,74 Z"
+    ];
+    return `
+    <div class="lotus-progress-wrap mt">
+      <svg class="lotus-progress-svg" viewBox="0 0 120 88" xmlns="http://www.w3.org/2000/svg" aria-label="${isHi ? `माह ${m} कमल प्रगति` : `Month ${m} lotus progress`}">
+        ${petals.map((d, idx) => {
+          const pm = idx + 1;
+          const cls = pm < m ? "lp-petal bloomed" : pm === m ? "lp-petal current" : "lp-petal";
+          return `<path class="${cls}" d="${d}"/>`;
+        }).join("")}
+        <circle cx="60" cy="64" r="7" fill="#fbbf24"/>
+      </svg>
+      <div>
+        <b class="small">${isHi ? `कमल-प्रगति: ${m} / 9 माह खिले` : `Lotus Progress: ${m} / 9 Months Bloomed`}</b>
+        <p class="small muted mb0">${isHi ? "हर पूर्ण माह के साथ एक और पंखुड़ी खिलती है।" : "Each month blooms one more lotus petal."}</p>
+      </div>
+    </div>`;
+  }
+
+  function thisMonthCard(p) {
+    const isHi = S.lang === "hi";
+    const m = Math.max(1, Math.min(9, Number(p.month) || 1));
+    let recs = DB.getVerifiedRecords("masanumasika", m);
+    if (!recs.length) recs = DB.getVerifiedRecords("fetus", m);
+    const summary = recs.length
+      ? (isHi ? recs[0].hindi_summary : (recs[0].english_summary || recs[0].hindi_summary))
+      : (isHi ? "नियमित सात्विक आहार और पर्याप्त विश्राम लें।" : "Follow a regular wholesome diet and adequate rest.");
+    return `
+    <div class="ok-card" id="thisMonthCard">
+      <div class="row between">
+        <span class="chip chip-ok">🪷 ${isHi ? `इस माह का कार्ड · माह ${m}` : `This Month's Card · Month ${m}`}</span>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="open-section" data-v="dos_donts">${isHi ? "विस्तार देखें →" : "View Details →"}</button>
+      </div>
+      <div class="row mt" style="align-items:center;gap:14px;">
+        <svg width="64" height="64" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <circle cx="40" cy="40" r="34" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+          <circle cx="40" cy="30" r="10" fill="#f5d0b5" stroke="#be123c" stroke-width="1.5"/>
+          <path d="M36,40 C26,45 28,60 40,60 C52,60 54,45 44,40 Z" fill="#fda4af" stroke="#be123c" stroke-width="1.5"/>
+        </svg>
+        <p class="mb0" style="flex:1;min-width:200px;">${E(summary)}</p>
+      </div>
+    </div>`;
+  }
+
+  function waterGlassCard() {
+    const isHi = S.lang === "hi";
+    const count = DB.getWaterCount ? DB.getWaterCount(todayStr()) : 0;
+    const fillPct = Math.min(100, count * 12);
+    const fillH = Math.round((fillPct / 100) * 56);
+    const fillY = 68 - fillH;
+    return `
+    <div class="glass card" id="waterGlassCard">
+      <div class="water-widget">
+        <svg class="water-svg" viewBox="0 0 66 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <clipPath id="glassClip">
+              <polygon points="12,12 54,12 48,70 18,70"/>
+            </clipPath>
+          </defs>
+          <rect class="water-fill-rect" x="10" y="${fillY}" width="46" height="${fillH + 4}" fill="#38bdf8" opacity="0.75" clip-path="url(#glassClip)"/>
+          <polygon points="12,12 54,12 48,70 18,70" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round"/>
+        </svg>
+        <div style="flex:1;min-width:190px;">
+          <h3 class="mb0">💧 ${isHi ? "पानी का गिलास (आज की गिनती)" : "Water Glass (Today's Count)"}</h3>
+          <p class="small muted mb0 mt">${isHi ? `आज पिए गए गिलास: <b>${count}</b>` : `Glasses today: <b>${count}</b>`}</p>
+          <div class="row mt">
+            <button type="button" class="btn btn-ghost btn-sm" data-action="water-sub">− 1</button>
+            <button type="button" class="btn btn-ok btn-sm" data-action="water-add">＋ 1 ${isHi ? "गिलास" : "Glass"}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function getTodaysTip() {
+    const isHi = S.lang === "hi";
+    const recs = DB.getVerifiedRecords(null, null);
+    if (!recs.length) {
+      return {
+        text: isHi ? "संतुलित, ताज़ा आहार लें और मन को प्रसन्न रखें।" : "Eat fresh, balanced meals and keep your mind calm.",
+        ref: "AyurGarbha"
+      };
+    }
+    const dayIdx = Math.floor(Date.now() / 86400000) % recs.length;
+    const r = recs[dayIdx];
+    return {
+      text: isHi ? r.hindi_summary : (r.english_summary || r.hindi_summary),
+      ref: `${formatSamhita(r.samhita)} · ${formatSthana(r.sthana)} ${r.adhyaya}/${r.shloka_no_niimh} (${r.id})`
+    };
+  }
+
+  function todaysTipCard() {
+    const isHi = S.lang === "hi";
+    const tip = getTodaysTip();
+    return `
+    <div class="glass card" id="todaysTipCard">
+      <div class="row between">
+        <h3 class="mb0">✨ ${isHi ? "आज का सुझाव" : "Today's Tip"}</h3>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="share-tip-image">🖼️ ${isHi ? "साझा करें" : "Share"}</button>
+      </div>
+      <p class="mt mb0">${E(tip.text)}</p>
+      <p class="small muted mt mb0">📜 ${E(tip.ref)}</p>
     </div>`;
   }
 
@@ -618,6 +746,8 @@
     const waPhone = DB.getWaPhone ? DB.getWaPhone() : "";
 
     return `
+    ${thisMonthCard(p)}
+
     <div class="glass card">
       <div class="garbhini-hero">
         <div style="flex:1;min-width:240px;">
@@ -627,6 +757,7 @@
             ${E(monthText)} · ${E(weeksText)} · EDD: <b>${E(eddText)}</b>
             ${p.firstPregnancy != null ? ` · ${p.firstPregnancy ? (S.lang === "hi" ? "पहली गर्भावस्था" : "First Pregnancy") : (S.lang === "hi" ? "अनुभवी माता" : "Subsequent Pregnancy")}` : ""}
           </p>
+          ${lotusProgressSVG(p.month || 1)}
           <div class="row mt">
             <button class="btn btn-ghost btn-sm" data-action="edit-form">${E(t("editProfile"))}</button>
             <button class="btn btn-danger btn-sm" data-action="delete-my-data">${E(t("deleteMyData"))}</button>
@@ -634,6 +765,11 @@
         </div>
         ${garbhiniIllustrationSVG()}
       </div>
+    </div>
+
+    <div class="grid g2 mt">
+      ${waterGlassCard()}
+      ${todaysTipCard()}
     </div>
 
     <div class="home-grid">
@@ -737,7 +873,7 @@
           ${r.sanskrit ? `<button type="button" class="btn btn-ghost btn-sm" data-action="toggle-shloka">${shlokaLabel}</button>` : ""}
           ${commText ? `<button type="button" class="btn btn-ghost btn-sm" data-action="toggle-commentary">${commLabel}</button>` : ""}
         </div>
-        ${r.sanskrit ? `<div class="shloka-body mt" hidden><div class="sa">${E(r.sanskrit)}</div></div>` : ""}
+        ${r.sanskrit ? `<div class="shloka-body mt" aria-hidden="true"><div class="sa">${E(r.sanskrit)}</div></div>` : ""}
         ${commText ? `<div class="commentary-body mt small muted" hidden style="padding:8px 10px;background:var(--glass);border-radius:8px;border:1px solid var(--line);">${E(commText)}</div>` : ""}
         ${cNote ? `<div class="mt"><span class="chip chip-warn">⚠️ ${E(cNote)}</span></div>` : ""}
         <div class="ref">${E(formatSamhita(r.samhita))} · ${E(formatSthana(r.sthana))} ${E(r.adhyaya || "")}/${E(r.shloka_no_niimh || "")} · <code>${E(r.id)}</code></div>
@@ -813,6 +949,158 @@
     </div>`;
   }
 
+  function renderSuprajaaCard(selMonth, curMonth) {
+    const isHi = S.lang === "hi";
+    const rows = DB.getSuprajaaByMonth ? DB.getSuprajaaByMonth(selMonth) : [];
+    const SLOTS = [
+      { key: "morning_drink", hi: "सुबह का पेयपान", en: "Morning Drink" },
+      { key: "breakfast", hi: "नाश्ता", en: "Breakfast" },
+      { key: "lunch", hi: "खाना", en: "Lunch" },
+      { key: "afternoon_snack", hi: "दोपहर का नाश्ता", en: "Afternoon Snack" },
+      { key: "dinner", hi: "रात का खाना", en: "Dinner" },
+      { key: "fruits", hi: "फल", en: "Fruits" },
+      { key: "dairy", hi: "दूध / दूध-उत्पाद", en: "Milk / Dairy" }
+    ];
+    const bySlot = {};
+    rows.forEach((r) => { bySlot[r.meal_slot] = r; });
+
+    return `
+    <div class="glass card mt" id="suprajaaCard">
+      <div class="row between">
+        <div>
+          <span class="chip chip-ok">${isHi ? "संस्थागत आहार-तालिका" : "Institutional Diet Table"}</span>
+          <h3 class="mt mb0" style="margin-top:8px;">🍲 ${isHi ? "सुप्रजा: मासानुमासिक आहार" : "Suprajaa: Month-wise Diet"}</h3>
+          <p class="small muted mb0">${isHi ? "राष्ट्रीय आयुष मिशन जन स्वास्थ्य कार्यक्रम के अंतर्गत" : "Under the National AYUSH Mission Public Health Programme"}</p>
+        </div>
+        <span class="chip">${isHi ? `माह ${selMonth}` : `Month ${selMonth}`}</span>
+      </div>
+
+      <div class="pillbar mt">
+        ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((m) => `
+          <button type="button" class="pill ${m === selMonth ? "active" : ""} ${m === curMonth ? "now" : ""}" data-action="dos-month" data-v="${m}">
+            ${isHi ? `माह ${m}` : `M${m}`}
+          </button>
+        `).join("")}
+      </div>
+
+      ${rows.length ? `
+        <div class="suprajaa-rows">
+          ${SLOTS.map((sl, idx) => {
+            const rec = bySlot[sl.key];
+            if (!rec) return "";
+            const isTierB = rec.tier === "B";
+            return `
+            <div class="sup-row sup-slot-${idx}">
+              <div class="sup-slot-label">${E(isHi ? sl.hi : sl.en)}</div>
+              <div>
+                <span>${E(rec.items)}</span>
+                ${rec.needs_check ? ` <span class="chip chip-warn" title="${isHi ? "छपी प्रति से मिलान अपेक्षित" : "Needs verification against print"}">⚠</span>` : ""}
+                ${isTierB ? `<div class="mt" style="margin-top:4px;"><b style="color:var(--crimson-d);">${isHi ? "चिकित्सक की सलाह के बिना न लें।" : "Do not take without physician advice."}</b></div>` : ""}
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      ` : `<div class="placeholder-box mt"><p class="mb0">${isHi ? "तालिका लोड हो रही है…" : "Loading table…"}</p></div>`}
+
+      <p class="small muted mt mb0"><b>*${isHi ? "सब्जी:" : "Sabzi:"}</b> ${isHi ? "हरे पत्तेदार सब्जियाँ जैसे पालक, मेथी, गिलकी, भिंडी, लोकी आदि" : "Green leafy & seasonal vegetables like spinach, fenugreek, ridge gourd, okra, bottle gourd, etc."}</p>
+      <div class="warn-card mt mb0" style="padding:10px 12px;">
+        <p class="small mb0">⚕️ ${isHi ? "यह सुझाव है, चिकित्सा-योजना नहीं। मधुमेह, उच्च रक्तचाप या एलर्जी जैसी स्थिति में अपने चिकित्सक से पूछें।" : "This is a general suggestion, not a medical plan. Consult your physician if you have diabetes, high blood pressure, or food allergies."}</p>
+      </div>
+      <p class="sup-source-line">${isHi ? "स्रोत: सुप्रजा पुस्तिका, शासकीय स्वशासी अष्टांग आयुर्वेद महाविद्यालय, इन्दौर।" : "Source: Suprajaa Booklet, Govt. Autonomous Ashtanga Ayurveda College, Indore."}</p>
+    </div>`;
+  }
+
+  function renderWhoPerspectiveBox(sectionKey) {
+    const isHi = S.lang === "hi";
+    const items = sectionKey === "dos_donts" ? [
+      {
+        code: "A.1.1",
+        hiTitle: "संतुलित भोजन और सक्रिय रहना",
+        enTitle: "Healthy eating and staying active",
+        hiBody: "WHO संतुलित भोजन और शारीरिक रूप से सक्रिय रहने की सलाह देता है। आपके लिए उपयुक्त वज़न अपने चिकित्सक से पूछें।",
+        enBody: "WHO recommends counselling on healthy eating and staying active. Ask your physician what is right for you."
+      },
+      {
+        code: "A.10",
+        hiTitle: "रोज़ की कैफ़ीन कम करना",
+        enTitle: "Lowering daily caffeine",
+        hiBody: "WHO के अनुसार रोज़ की कैफ़ीन कम रखने की सलाह है (गर्भपात का जोखिम घटाने के लिए)।",
+        enBody: "WHO advises lowering daily caffeine to reduce the risk of miscarriage."
+      },
+      {
+        code: "E.7",
+        hiTitle: "कम से कम आठ जाँचें",
+        enTitle: "At least eight antenatal contacts",
+        hiBody: "WHO के अनुसार गर्भावस्था में कम से कम आठ बार स्वास्थ्य-संपर्क (जाँच) की सलाह है, ताकि प्रगति देखी जा सके।",
+        enBody: "WHO recommends at least eight antenatal contacts to monitor progress."
+      }
+    ] : [
+      {
+        code: "D.1",
+        hiTitle: "उबकाई",
+        enTitle: "Nausea",
+        hiBody: "WHO के अनुसार शुरुआती गर्भावस्था की उबकाई में अदरक, कैमोमाइल, विटामिन B6 या एक्यूपंक्चर के विकल्प बताए गए हैं, महिला की पसंद और उपलब्धता के अनुसार। इनमें से कुछ भी चिकित्सक की सलाह के बिना न लें।",
+        enBody: "WHO lists ginger, chamomile, vitamin B6 or acupuncture as options for nausea in early pregnancy; do not take any without your physician's advice."
+      },
+      {
+        code: "D.2",
+        hiTitle: "सीने की जलन",
+        enTitle: "Heartburn",
+        hiBody: "WHO खान-पान और जीवनशैली में बदलाव की सलाह देता है। एंटासिड तभी जब जीवनशैली से आराम न मिले — चिकित्सक की सलाह के बिना न लें।",
+        enBody: "WHO advises diet and lifestyle changes for heartburn; antacids only if symptoms persist — do not take without your physician's advice."
+      },
+      {
+        code: "D.3",
+        hiTitle: "पैरों की ऐंठन",
+        enTitle: "Leg cramps",
+        hiBody: "WHO के अनुसार मैग्नीशियम, कैल्शियम या गैर-दवा विकल्प हैं (महिला की पसंद और उपलब्धता से)। सप्लीमेंट चिकित्सक की सलाह के बिना न लें।",
+        enBody: "WHO lists magnesium, calcium or non-drug options for leg cramps; do not take supplements without your physician's advice."
+      },
+      {
+        code: "D.4",
+        hiTitle: "पीठ दर्द",
+        enTitle: "Back pain",
+        hiBody: "WHO गर्भावस्था में नियमित व्यायाम की सलाह देता है (पीठ और पेल्विक दर्द को रोकने के लिए)। उपचार में फ़िज़ियोथेरेपी, सपोर्ट बेल्ट या एक्यूपंक्चर जैसे विकल्प बताए गए हैं। कौन-सा व्यायाम आपके लिए ठीक है, यह अपने चिकित्सक से पूछें।",
+        enBody: "WHO recommends regular exercise through pregnancy for back and pelvic pain, and lists physiotherapy, support belts or acupuncture as options. Ask your physician which exercise suits you."
+      },
+      {
+        code: "D.5",
+        hiTitle: "कब्ज़",
+        enTitle: "Constipation",
+        hiBody: "WHO के अनुसार खान-पान से आराम न हो तो गेहूँ के चोकर जैसे फाइबर सप्लीमेंट का विकल्प है — चिकित्सक की सलाह के बिना न लें।",
+        enBody: "WHO lists wheat bran or other fibre supplements if diet fails — do not take without your physician's advice."
+      },
+      {
+        code: "D.6",
+        hiTitle: "सूजन",
+        enTitle: "Swelling (oedema)",
+        hiBody: "WHO के अनुसार पैरों को ऊपर रखना, कम्प्रेशन स्टॉकिंग और पानी में पाँव डुबोना जैसे गैर-दवा विकल्प हैं (अपने चिकित्सक से पूछकर)।",
+        enBody: "WHO lists leg elevation, compression stockings and water immersion as non-drug options for swelling, on your physician's advice."
+      }
+    ];
+
+    return `
+      <div class="who-box mt" id="whoBox_${E(sectionKey)}">
+        <div class="row between">
+          <h3 class="mb0">🩺 ${isHi ? "आधुनिक दृष्टि (WHO)" : "Modern Perspective (WHO)"}</h3>
+          <button type="button" class="chip small who-src-chip" data-action="open-concern-sources">
+            📚 ${isHi ? "स्रोत: WHO (2016)" : "Source: WHO (2016)"}
+          </button>
+        </div>
+        <ul class="who-box-list">
+          ${items.map((it) => `
+            <li>
+              <strong>${E(isHi ? it.hiTitle : it.enTitle)} (${E(it.code)}):</strong>
+              ${E(isHi ? it.hiBody : it.enBody)}
+            </li>
+          `).join("")}
+        </ul>
+        <div class="who-diff-note">
+          ${isHi ? "दोनों के बीच फ़र्क़ हो तो अपने चिकित्सक से पूछें।" : "If there is a difference between the two, ask your physician."}
+        </div>
+      </div>`;
+  }
+
   function secDosDonts() {
     const isHi = S.lang === "hi";
     const p = DB.getSelfProfile() || {};
@@ -842,20 +1130,24 @@
           <h3>${isHi ? "विहार — दैनिक जीवनशैली व सावधानियाँ" : "Vihara — Lifestyle Do's & Don'ts"}</h3>
           ${renderRecordList(DB.getVerifiedRecords("dos_donts", null).filter((r) => r.month == null && (r.section_tag.includes("vihara") || r.samhita === "sushruta" || r.id === "CH-SHA-8-21-a")))}
         ` : `
-          <div class="row between">
-            <h3 class="mb0">${isHi ? `मासानुमासिक परिचर्या — माह ${selMonth}` : `Masanumasika Regimen — Month ${selMonth}`}</h3>
-            <span class="chip chip-ok">${isHi ? `आपका वर्तमान माह: ${curMonth}` : `Your Current Month: ${curMonth}`}</span>
+          <div class="glass card" style="background:var(--glass2);">
+            <div class="row between">
+              <h3 class="mb0">📜 ${isHi ? `संहिता: मासानुमासिक परिचर्या — माह ${selMonth}` : `Samhita: Masanumasika Regimen — Month ${selMonth}`}</h3>
+              <span class="chip chip-ok">${isHi ? `आपका वर्तमान माह: ${curMonth}` : `Your Current Month: ${curMonth}`}</span>
+            </div>
+            <div class="pillbar mt">
+              ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((m) => `
+                <button type="button" class="pill ${m === selMonth ? "active" : ""} ${m === curMonth ? "now" : ""}" data-action="dos-month" data-v="${m}">
+                  ${isHi ? `माह ${m}` : `M${m}`}
+                </button>
+              `).join("")}
+            </div>
+            ${renderVerifiedBlock("masanumasika", selMonth)}
           </div>
-          <div class="pillbar mt">
-            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((m) => `
-              <button type="button" class="pill ${m === selMonth ? "active" : ""} ${m === curMonth ? "now" : ""}" data-action="dos-month" data-v="${m}">
-                ${isHi ? `माह ${m}` : `M${m}`}
-              </button>
-            `).join("")}
-          </div>
-          ${renderVerifiedBlock("masanumasika", selMonth)}
+          ${renderSuprajaaCard(selMonth, curMonth)}
         `}
       </div>
+      ${renderWhoPerspectiveBox("dos_donts")}
     </div>`;
   }
 
@@ -973,27 +1265,181 @@
     }
   ];
 
+  function linkifyHelplines(rawText) {
+    let html = E(rawText);
+    html = html.replace(/1-800-891-4416/g, '<a class="tel-chip" href="tel:18008914416">📞 1-800-891-4416</a>');
+    html = html.replace(/\b(14416|14490|181|112)\b/g, '<a class="tel-chip" href="tel:$1">📞 $1</a>');
+    return html;
+  }
+
+  function renderQuickSolutions() {
+    const isHi = S.lang === "hi";
+    const items = DB.getConcerns ? DB.getConcerns() : [];
+    const groups = [
+      { key: "physical", hi: "शारीरिक (12)", en: "Physical (12)" },
+      { key: "emotional", hi: "भावनात्मक (9)", en: "Emotional (9)" },
+      { key: "mental", hi: "मानसिक (6)", en: "Mental (6)" }
+    ];
+    const grp = S.concernGroup || "physical";
+    const grpItems = items.filter((c) => c.group === grp);
+    const sel = grpItems.find((c) => c.id === S.concernId) || grpItems[0] || items[0];
+
+    return `
+    <div class="glass card" id="quickSolutionsCard">
+      <div class="row between">
+        <h3 class="mb0">⚡ ${isHi ? "तुरंत समाधान" : "Quick Solutions"}</h3>
+        <span class="chip chip-ok">${isHi ? "27 चिंताएँ" : "27 Concerns"}</span>
+      </div>
+      <p class="small muted mt mb0">${isHi ? "समूह चुनें और अपनी चिंता के चिप पर टैप करें:" : "Select a group and tap a concern chip:"}</p>
+
+      <div class="seg mt">
+        ${groups.map((g) => `
+          <button type="button" class="${grp === g.key ? "active" : ""}" data-action="concern-group" data-v="${g.key}">
+            ${E(isHi ? g.hi : g.en)}
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="pillbar mt">
+        ${grpItems.map((c) => `
+          <button type="button" class="pill ${sel && sel.id === c.id ? "active" : ""}" data-action="concern-select" data-v="${E(c.id)}">
+            ${E(c.title)}
+          </button>
+        `).join("")}
+      </div>
+
+      ${sel ? `
+        <div class="glass card mt" id="concernDetailCard" style="background:var(--glass2);">
+          <div class="placeholder-box" style="margin-top:0;">
+            <p class="small mb0">⚕️ ${isHi ? "यह सामान्य जानकारी है, चिकित्सा सलाह नहीं।" : "This is general information, not medical advice."}</p>
+          </div>
+          <div class="row between mt">
+            <h3 class="mb0">${sel.num}. ${E(sel.title)}</h3>
+            <div class="row" style="gap:6px;">
+              ${sel.is_gen_only ? `<span class="chip chip-warn">${isHi ? "सामान्य सुझाव" : "General suggestion"}</span>` : ""}
+              ${sel.has_who_source ? `<button type="button" class="btn btn-ghost btn-sm" data-action="open-concern-sources">📚 ${isHi ? `स्रोत (${sel.src})` : `Sources (${sel.src})`}</button>` : `<span class="chip small">${E(sel.src)}</span>`}
+            </div>
+          </div>
+
+          <div class="mt">
+            <p class="mb0"><b>${isHi ? "क्या हो रहा है:" : "What is happening:"}</b> ${linkifyHelplines(sel.what_is_happening)}</p>
+            <p class="mt mb0"><b>${isHi ? "घर पर क्या करें:" : "What to do at home:"}</b> ${linkifyHelplines(sel.what_to_do)}</p>
+            <p class="mt mb0"><b>${E(sel.when_to_see_label || (isHi ? "कब मिलें" : "When to see a physician"))}:</b> ${linkifyHelplines(sel.when_to_see)}</p>
+            ${sel.extra_helpline ? `<p class="mt mb0"><b>${isHi ? "बात करने के लिए:" : "To talk:"}</b> ${linkifyHelplines(sel.extra_helpline)}</p>` : ""}
+            <p class="small muted mt mb0"><i>EN:</i> ${linkifyHelplines(sel.en)}</p>
+          </div>
+
+          ${sel.show_telemanas ? `
+            <div class="ok-card mt mb0" style="padding:10px 12px;">
+              <p class="small mb0">💚 <b>Tele-MANAS:</b> <a class="tel-chip" href="tel:14416">📞 14416</a> <a class="tel-chip" href="tel:18008914416">📞 1-800-891-4416</a> (${isHi ? "निःशुल्क, 24x7" : "Toll-free, 24x7"})</p>
+            </div>
+          ` : ""}
+        </div>
+      ` : ""}
+    </div>`;
+  }
+
+  function renderDailyThreeActivities() {
+    const isHi = S.lang === "hi";
+    const pool = [
+      { ic: "💧", hi: "थोड़ा पानी", hiDesc: "आराम से थोड़ा साफ़ पानी पी लें।", en: "A little water", enDesc: "Take a few calm sips of clean water." },
+      { ic: "🌬️", hi: "कुछ गहरी साँसें", hiDesc: "बिना ज़ोर लगाए 3–4 शांत गहरी साँसें लें।", en: "A few deep breaths", enDesc: "Take 3–4 gentle, unhurried breaths." },
+      { ic: "💬", hi: "किसी अपने से बात", hiDesc: "परिवार या किसी भरोसेमंद मित्र से दो बातें साझा करें।", en: "Talk to a loved one", enDesc: "Share a few words with family or a trusted friend." },
+      { ic: "🛋️", hi: "कुछ देर आराम", hiDesc: "करवट लेकर या सहारे के साथ कुछ मिनट शांत बैठें/लेटें।", en: "Rest for a while", enDesc: "Sit or lie comfortably with support for a few minutes." }
+    ];
+    const startIdx = Math.floor(Date.now() / 86400000) % pool.length;
+    const chosen = [0, 1, 2].map((offset) => pool[(startIdx + offset) % pool.length]);
+
+    return `
+    <div class="glass card" id="dailyThreeCard">
+      <h3 class="mb0">🌿 ${isHi ? "आज की 3 गतिविधियाँ" : "Today's 3 Simple Activities"}</h3>
+      <div class="daily-acts-grid">
+        ${chosen.map((a) => `
+          <div class="daily-act-card">
+            <div style="font-size:1.5rem;">${a.ic}</div>
+            <b class="mt" style="display:block;">${E(isHi ? a.hi : a.en)}</b>
+            <p class="small muted mb0 mt">${E(isHi ? a.hiDesc : a.enDesc)}</p>
+          </div>
+        `).join("")}
+      </div>
+    </div>`;
+  }
+
   function secPsychology() {
     const isHi = S.lang === "hi";
     const res = S.epdsResult;
+    const mins = S.breathMins || 1;
+    const pace = S.breathPace || "medium";
+    const paceMap = {
+      slow: { inS: 5, outS: 7, hi: "धीमी (5s / 7s)", en: "Slow (5s / 7s)" },
+      medium: { inS: 4, outS: 6, hi: "मध्यम (4s / 6s)", en: "Medium (4s / 6s)" },
+      fast: { inS: 3, outS: 4, hi: "तेज़ (3s / 4s)", en: "Fast (3s / 4s)" }
+    };
+    const curPace = paceMap[pace] || paceMap.medium;
+
     return `
     <div class="section-page">
       ${sectionHeader("psychology")}
+      ${renderQuickSolutions()}
+      ${renderDailyThreeActivities()}
+
       <div class="glass card">
         <h3>🌸 ${isHi ? "आयुर्वेदिक दृष्टिकोण (दौहृद व मन की शांति)" : "Ayurvedic Perspective (Dauhrida & Calmness)"}</h3>
         ${renderVerifiedBlock("psychology", null)}
       </div>
 
-      <div class="glass card">
-        <h3>🌬️ ${isHi ? "साँस लें — शांत ब्रीदिंग अभ्यास" : "Breathe — Calm Breathing Exercise"}</h3>
-        <p class="small muted">${isHi ? "तनाव या घबराहट कम करने के लिए 4 सेकंड गहरी साँस लें, 4 सेकंड रोकें, और 6 सेकंड धीरे छोड़ें।" : "Inhale gently for 4s, hold for 4s, and exhale slowly for 6s to calm your mind."}</p>
-        <div class="breath-box">
-          <div id="breathCircle" class="breath-circle">${isHi ? "तैयार" : "Ready"}</div>
-          <p id="breathLabel" class="small muted mb0">${isHi ? "शुरू करने के लिए नीचे क्लिक करें" : "Click below to start"}</p>
+      <div class="glass card" id="breathingCard">
+        <div class="row between">
+          <h3 class="mb0">🌬️ ${isHi ? "साँस अभ्यास (कमल)" : "Breathing Practice (Lotus)"}</h3>
+          <span id="breathCountdown" class="chip chip-ok">${mins}:00</span>
+        </div>
+
+        <div class="row mt" style="gap:12px;">
+          <div>
+            <span class="small muted">${isHi ? "अवधि:" : "Duration:"}</span>
+            <div class="pillbar" style="margin:4px 0 0;">
+              ${[1, 3, 5].map((m) => `<button type="button" class="pill ${mins === m ? "active" : ""}" data-action="breath-dur" data-v="${m}">${m} ${isHi ? "मिनट" : "min"}</button>`).join("")}
+            </div>
+          </div>
+          <div>
+            <span class="small muted">${isHi ? "गति:" : "Pace:"}</span>
+            <div class="pillbar" style="margin:4px 0 0;">
+              ${["slow", "medium", "fast"].map((pk) => `<button type="button" class="pill ${pace === pk ? "active" : ""}" data-action="breath-pace" data-v="${pk}">${E(isHi ? paceMap[pk].hi : paceMap[pk].en)}</button>`).join("")}
+            </div>
+          </div>
+        </div>
+
+        <div class="breath-box mt">
+          <svg id="breathLotus" class="breath-lotus-svg" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" aria-label="${isHi ? "साँस का कमल" : "Breathing Lotus"}">
+            <path d="M70,104 C44,100 22,82 18,56 C40,60 58,76 70,104 Z" fill="#34d399" opacity="0.8"/>
+            <path d="M70,104 C96,100 118,82 122,56 C100,60 82,76 70,104 Z" fill="#34d399" opacity="0.8"/>
+            <path d="M70,104 C48,90 36,64 42,36 C58,52 66,76 70,104 Z" fill="#10b981" opacity="0.88"/>
+            <path d="M70,104 C92,90 104,64 98,36 C82,52 74,76 70,104 Z" fill="#10b981" opacity="0.88"/>
+            <path d="M70,104 C56,78 58,44 70,22 C82,44 84,78 70,104 Z" fill="#059669"/>
+            <circle cx="70" cy="78" r="10" fill="#fef08a"/>
+          </svg>
+          ${S.breathOm ? `
+            <div id="aumDisplay" class="aum-display" aria-label="A U M">
+              <span id="aumA" class="aum-letter">A</span>
+              <span id="aumU" class="aum-letter">U</span>
+              <span id="aumM" class="aum-letter">M</span>
+            </div>
+          ` : ""}
+          <p id="breathLabel" class="small muted mb0">${isHi ? `तैयार (${curPace.inS}s अंदर · ${curPace.outS}s बाहर)` : `Ready (${curPace.inS}s in · ${curPace.outS}s out)`}</p>
           <button type="button" id="breathBtn" class="btn btn-ok btn-sm mt" data-action="breath-toggle">
-            ${S.breathingActive ? (isHi ? "⏸ रोकें" : "⏸ Pause") : (isHi ? "▶ साँस लें (शुरू करें)" : "▶ Start Breathing")}
+            ${S.breathingActive ? (isHi ? "⏸ रोकें" : "⏸ Stop") : (isHi ? "▶ शुरू करें" : "▶ Start")}
           </button>
         </div>
+
+        <label class="consent-check" style="margin:10px 0 6px;padding:8px 12px;font-size:.86rem;">
+          <input type="checkbox" id="omSwitch" ${S.breathOm ? "checked" : ""} data-action="toggle-om" />
+          <span>${isHi ? "ॐ का उच्चारण साथ में करें (मन में या धीरे बोलकर)।" : "Include Om chanting (silently in mind or softly)."}</span>
+        </label>
+        <label class="consent-check" style="margin:0 0 8px;padding:8px 12px;font-size:.86rem;background:var(--glass2);border-color:var(--line);">
+          <input type="checkbox" id="toneSwitch" ${S.breathTone ? "checked" : ""} data-action="toggle-tone" />
+          <span>${isHi ? "हल्की लय की ध्वनि (वैकल्पिक — कभी भी बंद करें)" : "Soft rhythmic tone (optional — mute anytime)"}</span>
+        </label>
+        <p class="small muted mb0">${isHi ? "पारंपरिक अभ्यास, मन को शांत करने के लिए। यह उपचार नहीं।" : "Traditional practice to calm the mind. Not a medical treatment."}</p>
       </div>
 
       <div class="glass card">
@@ -1088,6 +1534,8 @@
     return `
     <div class="section-page">
       ${sectionHeader("minor")}
+      ${renderQuickSolutions()}
+      ${renderDailyThreeActivities()}
       <div class="glass card">
         <div class="pillbar">
           ${items.map((x) => `
@@ -1120,6 +1568,7 @@
           </button>
         </div>
       </div>
+      ${renderWhoPerspectiveBox("minor")}
     </div>`;
   }
 
@@ -1317,7 +1766,18 @@
     let outHTML = "";
     const res = S.askResult;
     if (S.askLoading) {
-      outHTML = `<div class="glass card mt"><span class="loader"></span> ${isHi ? "संहिता-पाठ में खोज जारी है…" : "Searching verified Samhita texts…"}</div>`;
+      outHTML = `
+      <div class="glass card mt">
+        <div class="lotus-loader-wrap">
+          <svg class="lotus-loader-svg" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M30,46 C18,44 10,34 8,22 C18,24 25,32 30,46 Z" fill="#fb7185"/>
+            <path d="M30,46 C42,44 50,34 52,22 C42,24 35,32 30,46 Z" fill="#fb7185"/>
+            <path d="M30,46 C22,34 24,18 30,10 C36,18 38,34 30,46 Z" fill="#e11d48"/>
+            <circle cx="30" cy="34" r="4" fill="#fbbf24"/>
+          </svg>
+          <b>${isHi ? "सोच रहा है…" : "Thinking…"}</b>
+        </div>
+      </div>`;
     } else if (res) {
       if (res.red_flag_blocked && res.red_flag_eval) {
         outHTML = res.red_flag_eval.bannerHTML(S.lang);
@@ -1328,20 +1788,18 @@
           <p class="small muted mt mb0">${isHi ? "केवल सत्यापित चरक व सुश्रुत संहिता (Tier A) पाठ से उत्तर दिया जाता है।" : "Answers are grounded strictly in verified Charaka & Sushruta (Tier A) texts."}</p>
         </div>`;
       } else {
-        const srcBadge =
+        const srcLabel =
           res.source === "ayurparam"
-            ? (isHi ? "🤖 AyurParam (सत्यापित)" : "🤖 AyurParam (Validated)")
-            : res.source === "extractive_fallback_validator_rejected"
-            ? (isHi ? "🛡️ सत्यापित संहिता उत्तर (बाहरी संदर्भ अस्वीकृत)" : "🛡️ Extractive Fallback (Citation Validator rejected external ID)")
-            : (isHi ? "📖 सत्यापित संहिता उत्तर (DB)" : "📖 Extractive Fallback (Verified DB)");
+            ? (isHi ? "AyurParam द्वारा सरलीकृत" : "Simplified by AyurParam")
+            : (isHi ? "सीधे संहिता-अंश से" : "Directly from Samhita excerpt");
         outHTML = `
         <div class="glass answer mt">
           <div class="row between">
-            <span class="chip chip-ok src-badge">${E(srcBadge)}</span>
+            <span class="chip chip-ok src-badge">${E(srcLabel)}</span>
             ${res.filters && res.filters.month ? `<span class="chip small">${isHi ? `माह ${res.filters.month}` : `Month ${res.filters.month}`}</span>` : ""}
           </div>
           <p class="mt" style="font-size:1rem;line-height:1.6;">${E(res.direct_answer)}</p>
-          <p class="small muted">⚕️ ${isHi ? "किसी भी औषधि या आहार परिवर्तन से पहले चिकित्सक से पूछें।" : "Consult a qualified physician before starting any remedy or dietary change."}</p>
+          <p class="small muted mb0">${E(srcLabel)} · ⚕️ ${isHi ? "किसी भी औषधि या आहार परिवर्तन से पहले चिकित्सक से पूछें।" : "Consult a qualified physician before starting any remedy or dietary change."}</p>
           <h4 class="mt">${isHi ? "सत्यापित संहिता संदर्भ (DB से ID द्वारा)" : "Verified Samhita Citations (from DB by ID)"}</h4>
           ${renderRecordList(res.records || [])}
         </div>`;
@@ -1358,7 +1816,7 @@
         <p class="small muted">${E(t("askDesc"))}${p.month ? ` (${isHi ? `आपका माह: ${p.month}` : `Your Month: ${p.month}`})` : ""}</p>
 
         <div class="row mt">
-          <input id="askQ" value="${E(S.askQuery)}" placeholder="${isHi ? "अपना प्रश्न यहाँ लिखें…" : "Type your question here…"}" style="flex:1;" />
+          <input id="askQ" maxlength="500" value="${E(S.askQuery)}" placeholder="${isHi ? "अपना प्रश्न यहाँ लिखें…" : "Type your question here…"}" style="flex:1;" />
           <button type="button" class="btn btn-ok" data-action="ask-submit">${isHi ? "पूछें →" : "Ask →"}</button>
         </div>
 
@@ -1400,6 +1858,11 @@
       app.innerHTML = viewAsk();
     } else {
       app.innerHTML = viewHome();
+    }
+
+    if (S.screen !== "splash" && !(S.screen === "section" && S.activeSection === "high_risk")) {
+      const first = app.firstElementChild;
+      if (first) first.classList.add("page-enter");
     }
   }
 
@@ -1552,37 +2015,155 @@
       }
       render();
     },
+    "concern-group"(el) {
+      S.concernGroup = el.dataset.v || "physical";
+      const items = DB.getConcerns ? DB.getConcerns().filter((c) => c.group === S.concernGroup) : [];
+      if (items.length) S.concernId = items[0].id;
+      render();
+    },
+    "concern-select"(el) {
+      S.concernId = el.dataset.v || "CON-1";
+      render();
+    },
+    "open-concern-sources"() {
+      const isHi = S.lang === "hi";
+      const sources = DB.getConcernSources ? DB.getConcernSources() : [];
+      const m = $("#modal");
+      const mc = $("#modalCard");
+      if (!m || !mc) return;
+      mc.innerHTML = `
+        <div class="row between mb0">
+          <h3 class="mb0">📚 ${isHi ? "स्रोत-सूची" : "Source List"}</h3>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal">✕</button>
+        </div>
+        <ol class="mt" style="padding-left:20px;line-height:1.6;">
+          ${sources.map((s) => `<li style="margin:6px 0;">${E(s)}</li>`).join("")}
+        </ol>
+        <div class="row between mt">
+          <span></span>
+          <button type="button" class="btn btn-ok btn-sm" data-action="close-modal">${isHi ? "बंद करें" : "Close"}</button>
+        </div>`;
+      m.hidden = false;
+    },
+    "breath-dur"(el) {
+      S.breathMins = Number(el.dataset.v) || 1;
+      if (S.breathingActive) H["breath-toggle"]();
+      else render();
+    },
+    "breath-pace"(el) {
+      S.breathPace = el.dataset.v || "medium";
+      if (S.breathingActive) H["breath-toggle"]();
+      else render();
+    },
+    "toggle-om"(el) {
+      S.breathOm = Boolean(el.checked);
+      render();
+    },
+    "toggle-tone"(el) {
+      S.breathTone = Boolean(el.checked);
+      if (!S.breathTone && S.audioCtx) {
+        try { S.audioCtx.close(); } catch (e) {}
+        S.audioCtx = null;
+      }
+    },
     "breath-toggle"() {
       const isHi = S.lang === "hi";
-      if (S.breathingActive) {
+      const stopBreath = () => {
         S.breathingActive = false;
         if (S.breathingTimer) clearTimeout(S.breathingTimer);
+        if (S.breathTickTimer) clearInterval(S.breathTickTimer);
         S.breathingTimer = null;
+        S.breathTickTimer = null;
+        if (S.audioCtx) {
+          try { S.audioCtx.close(); } catch (e) {}
+          S.audioCtx = null;
+        }
+      };
+
+      if (S.breathingActive) {
+        stopBreath();
         render();
         return;
       }
+
       S.breathingActive = true;
       const btn = $("#breathBtn");
-      if (btn) btn.textContent = isHi ? "⏸ रोकें" : "⏸ Pause";
+      if (btn) btn.textContent = isHi ? "⏸ रोकें" : "⏸ Stop";
+
+      const paceMap = {
+        slow: { inMs: 5000, outMs: 7000 },
+        medium: { inMs: 4000, outMs: 6000 },
+        fast: { inMs: 3000, outMs: 4000 }
+      };
+      const cur = paceMap[S.breathPace] || paceMap.medium;
+      S.breathEndAt = Date.now() + (S.breathMins || 1) * 60000;
+
+      const playChime = (freq, durSec) => {
+        if (!S.breathTone) return;
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          if (!S.audioCtx) S.audioCtx = new AC();
+          const osc = S.audioCtx.createOscillator();
+          const gain = S.audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.001, S.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.035, S.audioCtx.currentTime + 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.001, S.audioCtx.currentTime + durSec);
+          osc.connect(gain);
+          gain.connect(S.audioCtx.destination);
+          osc.start();
+          osc.stop(S.audioCtx.currentTime + durSec + 0.05);
+        } catch (e) { /* ignore */ }
+      };
+
+      const setAum = (litId) => {
+        ["aumA", "aumU", "aumM"].forEach((id) => {
+          const el = $("#" + id);
+          if (el) el.classList.toggle("lit", id === litId);
+        });
+      };
+
+      S.breathTickTimer = setInterval(() => {
+        const rem = Math.max(0, Math.ceil((S.breathEndAt - Date.now()) / 1000));
+        const cd = $("#breathCountdown");
+        if (cd) {
+          const mm = Math.floor(rem / 60);
+          const ss = String(rem % 60).padStart(2, "0");
+          cd.textContent = `${mm}:${ss}`;
+        }
+        if (rem <= 0) {
+          stopBreath();
+          render();
+          toast(isHi ? "साँस अभ्यास पूर्ण हुआ" : "Breathing practice completed");
+        }
+      }, 500);
 
       const phases = [
-        { cls: "inhale", hi: "गहरी साँस लें (4 सेकंड)", en: "Breathe In (4s)", ms: 4000 },
-        { cls: "hold", hi: "रोकें (4 सेकंड)", en: "Hold Gently (4s)", ms: 4000 },
-        { cls: "exhale", hi: "धीरे छोड़ें (6 सेकंड)", en: "Breathe Out (6s)", ms: 6000 }
+        { cls: "inhale", hi: `गहरी साँस अंदर लें (${cur.inMs / 1000}s)`, en: `Inhale Gently (${cur.inMs / 1000}s)`, ms: cur.inMs, aum: "aumA", freq: 220 },
+        { cls: "exhale", hi: `धीरे साँस बाहर छोड़ें (${cur.outMs / 1000}s)`, en: `Exhale Slowly (${cur.outMs / 1000}s)`, ms: cur.outMs, aum: "aumU", freq: 174 }
       ];
       let idx = 0;
       const step = () => {
         if (!S.breathingActive) return;
-        const c = $("#breathCircle");
+        const lotus = $("#breathLotus");
         const l = $("#breathLabel");
-        if (!c) {
-          S.breathingActive = false;
+        if (!lotus) {
+          stopBreath();
           return;
         }
         const ph = phases[idx % phases.length];
-        c.className = "breath-circle " + ph.cls;
-        c.textContent = S.lang === "hi" ? ph.hi.split(" ")[0] : ph.en.split(" ")[0];
+        lotus.style.transitionDuration = (ph.ms / 1000) + "s";
+        lotus.setAttribute("class", "breath-lotus-svg " + ph.cls);
         if (l) l.textContent = S.lang === "hi" ? ph.hi : ph.en;
+        if (S.breathOm) {
+          setAum(ph.aum);
+          if (ph.cls === "exhale") {
+            setTimeout(() => { if (S.breathingActive && S.breathOm) setAum("aumM"); }, Math.round(ph.ms * 0.5));
+          }
+        }
+        playChime(ph.freq, Math.min(1.8, ph.ms / 2000));
         idx++;
         S.breathingTimer = setTimeout(step, ph.ms);
       };
@@ -1633,10 +2214,11 @@
       const body = card && card.querySelector(".shloka-body");
       if (!body) return;
       const isHi = S.lang === "hi";
-      body.hidden = !body.hidden;
-      el.textContent = body.hidden
-        ? (isHi ? "📜 श्लोक देखें" : "📜 View Shloka")
-        : (isHi ? "📜 श्लोक छिपाएँ" : "📜 Hide Shloka");
+      const isOpen = body.classList.toggle("open");
+      body.setAttribute("aria-hidden", isOpen ? "false" : "true");
+      el.textContent = isOpen
+        ? (isHi ? "📜 श्लोक छिपाएँ" : "📜 Hide Shloka")
+        : (isHi ? "📜 श्लोक देखें" : "📜 View Shloka");
     },
     "toggle-commentary"(el) {
       const card = el.closest(".shloka");
@@ -1684,10 +2266,87 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       toast(S.lang === "hi" ? "कैलेंडर रिमाइंडर (.ics) डाउनलोड हो गया" : "Calendar reminder (.ics) downloaded");
     },
+    "water-add"() {
+      const d = todayStr();
+      const cur = DB.getWaterCount(d);
+      DB.setWaterCount(d, cur + 1);
+      const wrap = $("#waterGlassCard");
+      if (wrap) wrap.outerHTML = waterGlassCard();
+    },
+    "water-sub"() {
+      const d = todayStr();
+      const cur = DB.getWaterCount(d);
+      DB.setWaterCount(d, Math.max(0, cur - 1));
+      const wrap = $("#waterGlassCard");
+      if (wrap) wrap.outerHTML = waterGlassCard();
+    },
+    "share-tip-image"() {
+      const isHi = S.lang === "hi";
+      const tip = getTodaysTip();
+      const canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 460;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const grad = ctx.createLinearGradient(0, 0, 800, 460);
+      grad.addColorStop(0, "#fffbeb");
+      grad.addColorStop(1, "#ecfdf5");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 800, 460);
+
+      ctx.strokeStyle = "#be123c";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(18, 18, 764, 424);
+
+      ctx.fillStyle = "#9f1239";
+      ctx.font = "bold 28px Georgia, serif";
+      ctx.fillText(isHi ? "🪷 आयुर्गर्भ — आज का सुझाव" : "🪷 AyurGarbha — Today's Tip", 48, 76);
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "22px sans-serif";
+      const words = String(tip.text).split(" ");
+      let line = "";
+      let y = 140;
+      for (const w of words) {
+        const test = line ? line + " " + w : w;
+        if (ctx.measureText(test).width > 700) {
+          ctx.fillText(line, 48, y);
+          line = w;
+          y += 34;
+          if (y > 330) break;
+        } else {
+          line = test;
+        }
+      }
+      if (line && y <= 350) ctx.fillText(line, 48, y);
+
+      ctx.fillStyle = "#047857";
+      ctx.font = "bold 17px sans-serif";
+      ctx.fillText("📜 " + tip.ref, 48, 395);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "14px sans-serif";
+      ctx.fillText(isHi ? "केवल शैक्षिक मार्गदर्शन हेतु · आयुर्गर्भ" : "Educational guidance only · AyurGarbha", 48, 424);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "ayurgarbha-todays-tip.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast(isHi ? "सुझाव चित्र-कार्ड डाउनलोड हो गया (WhatsApp पर साझा करें)" : "Tip image card downloaded (share on WhatsApp)");
+      }, "image/png");
+    },
     "baby-kick"() {
       const isHi = S.lang === "hi";
       const baby = $("#garbhiniBaby");
       const ripple = $("#kickRipple");
+      const heart = $("#touchHeart");
       const msg = $("#kickMsg");
       if (baby) {
         baby.classList.remove("kicking");
@@ -1698,6 +2357,11 @@
         ripple.classList.remove("active");
         void ripple.getBoundingClientRect();
         ripple.classList.add("active");
+      }
+      if (heart) {
+        heart.classList.remove("active");
+        void heart.getBoundingClientRect();
+        heart.classList.add("active");
       }
       if (msg) {
         msg.textContent = isHi ? "💛 शिशु ने हलचल की!" : "💛 Baby moved!";
@@ -1752,19 +2416,69 @@
   });
 
   async function runAsk(q) {
-    if (!q) return toast(S.lang === "hi" ? "कृपया पहले प्रश्न लिखें" : "Please enter a question", true);
+    const cleanQ = String(q || "").trim().slice(0, 500);
+    if (!cleanQ) return toast(S.lang === "hi" ? "कृपया पहले प्रश्न लिखें" : "Please enter a question", true);
+
+    if (/self[- ]?harm|suicide|आत्म-?हानि|खुद को नुकसान|मरने का मन|जीने की इच्छा नहीं/i.test(cleanQ)) {
+      S.askLoading = false;
+      S.screen = "help";
+      render();
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    const localRf = evaluateRedFlags({ text: cleanQ });
+    if (localRf.triggered) {
+      S.askLoading = false;
+      S.askResult = { red_flag_blocked: true, red_flag_eval: localRf, records: [] };
+      render();
+      return;
+    }
+
     S.askLoading = true;
     S.askResult = null;
     render();
+
     const p = DB.getSelfProfile() || {};
-    if (window.RAG && window.RAG.setRecords) {
-      window.RAG.setRecords(DB.getVerifiedRecords());
+    let res = null;
+    try {
+      const resp = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: cleanQ,
+          month: p.month || null,
+          lang: S.lang
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        res = {
+          red_flag_blocked: Boolean(data.red_flag_blocked),
+          red_flag_eval: data.red_flag_blocked ? evaluateRedFlags({ text: cleanQ }) : null,
+          out_of_corpus: Boolean(data.out_of_corpus),
+          direct_answer: data.answer || "",
+          records: Array.isArray(data.records) ? data.records : [],
+          filters: data.filters || {},
+          source: data.source || "fallback"
+        };
+      }
+    } catch (e) {
+      /* fallback to client-side BM25 if /api/ask is unavailable locally */
     }
-    const res = await window.RAG.ask(q, {
-      month: p.month || null,
-      lang: S.lang,
-      evaluateRedFlags
-    });
+
+    if (!res) {
+      if (window.RAG && window.RAG.setRecords) {
+        window.RAG.setRecords(DB.getVerifiedRecords());
+      }
+      res = await window.RAG.ask(cleanQ, {
+        month: p.month || null,
+        lang: S.lang,
+        evaluateRedFlags
+      });
+      if (res && res.source !== "ayurparam") res.source = "fallback";
+    }
+
     S.askLoading = false;
     S.askResult = res;
     render();
@@ -1780,11 +2494,15 @@
     document.documentElement.dataset.theme = "light";
     S.screen = "splash";
     render();
-    DB.loadRecords().then(() => {
+    Promise.all([
+      DB.loadRecords(),
+      DB.loadSuprajaaRecords ? DB.loadSuprajaaRecords() : Promise.resolve(),
+      DB.loadConcerns ? DB.loadConcerns() : Promise.resolve()
+    ]).then(() => {
       if (window.RAG && window.RAG.setRecords) {
         window.RAG.setRecords(DB.getVerifiedRecords());
       }
-      if (S.screen === "section" || S.screen === "ask") render();
+      if (S.screen === "section" || S.screen === "ask" || S.screen === "home") render();
     });
     window.AyurGarbha = { S, render, evaluateRedFlags, buildWhatsAppUrl, buildIcsContent };
   })();
