@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AyurGarbha — AI Care Companion for Garbhini Paricharya</title>
+  <meta name="description" content="Ayurvedic guidance for Garbhini Paricharya based on Charaka Samhita &amp; Sushruta Samhita. Deterministic red-flag triage." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪷</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="bg-orbs" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <header class="topbar" id="topbar">
+    <a class="brand" href="#" data-action="home" aria-label="AyurGarbha home">
+      <span class="brand-mark">🪷</span>
+      <span class="brand-text"><b>AyurGarbha</b><small id="brandSubtitle">Garbhini Paricharya · Charaka &amp; Sushruta</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="chip chip-api chip-ok" id="apiChip" title="Charaka &amp; Sushruta Hybrid Retrieval">📖 Charaka &amp; Sushruta RAG</span>
+      <button class="btn btn-ghost btn-sm" data-action="toggle-lang" id="langBtn" aria-label="Toggle language English or Hindi">हिन्दी (HI)</button>
+    </div>
+  </header>
+
+  <!-- Permanent bilingual clinical advisory strip outside #app -->
+  <aside class="global-clinical-strip" role="note" aria-label="Clinical Advisory">
+    <div class="strip-content">
+      <span class="strip-pill">⚕️ Advisory</span>
+      <span class="strip-text">
+        <strong>मार्गदर्शन:</strong> यह प्लेटफ़ॉर्म केवल शैक्षिक एवं स्वास्थ्य संवर्धन हेतु है। किसी भी औषधि, बस्ति या आहार परिवर्तन से पूर्व योग्य चिकित्सक से परामर्श अवश्य लें।
+        <span class="strip-sep">·</span>
+        <strong>Guidance:</strong> For educational &amp; wellness support based on Charaka &amp; Sushruta Samhitas. Always consult a qualified physician before starting any treatment.
+      </span>
+    </div>
+  </aside>
+
+  <main id="app" class="container" aria-live="polite"></main>
+
+  <footer class="footer no-print">
+    <p><b>AyurGarbha</b> — Garbhini Paricharya Guidance from Charaka Samhita &amp; Sushruta Samhita. DPDP Act 2023 aligned.</p>
+  </footer>
+
+  <!-- Generic modal host -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card glass" id="modalCard" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="js/knowledge-base.js"></script>
+  <script src="js/rag-engine.js"></script>
+  <script src="js/db-service.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
