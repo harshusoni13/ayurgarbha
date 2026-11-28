@@ -5,7 +5,7 @@
  * ===================================================================== */
 (function () {
   "use strict";
-  const KB = window.KB, DB = window.DB;
+  const DB = window.DB;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const E = (s) =>
@@ -21,6 +21,23 @@
     if (!s) return "—";
     const d = new Date(s + (s.length === 10 ? "T00:00:00" : ""));
     return isNaN(d) ? s : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  };
+  const parseDate = (s) => {
+    if (!s) return null;
+    const d = new Date(s + "T00:00:00");
+    return isNaN(d) ? null : d;
+  };
+  const gestationalWeeks = (lmp) => {
+    const l = parseDate(lmp);
+    if (!l) return null;
+    const days = Math.floor((new Date() - l) / 86400000);
+    return { days, weeks: Math.floor(days / 7), rem: days % 7 };
+  };
+  const monthFromWeeks = (w) => Math.max(1, Math.min(9, Math.floor((w || 0) / 4.345) + 1));
+  const eddFromLmp = (lmp) => {
+    const l = parseDate(lmp);
+    if (!l) return null;
+    return new Date(l.getTime() + 280 * 86400000).toISOString().slice(0, 10);
   };
 
   /* ------------------- Bilingual Translations (हिन्दी Default + English) ------------------- */
@@ -168,8 +185,7 @@
     splashTimer: null,
     askQuery: "",
     askResult: null,
-    askLoading: false,
-    showAskSettings: false
+    askLoading: false
   };
 
   /* ------------------- Rule-Based Red-Flag Engine (Phase 4) ------------------- */
@@ -393,18 +409,18 @@
   /* ------------------- 4. DETAILS FORM ------------------- */
   function computeMetrics(mode, lmpVal, monthVal) {
     if (mode === "lmp" && lmpVal) {
-      const g = KB.gestationalWeeks(lmpVal);
+      const g = gestationalWeeks(lmpVal);
       if (g && g.days >= 0 && g.days <= 300) {
         const weeks = Math.max(0, Math.min(44, g.weeks));
-        const month = KB.monthFromWeeks(weeks);
-        const edd = KB.eddFromLmp(lmpVal);
+        const month = monthFromWeeks(weeks);
+        const edd = eddFromLmp(lmpVal);
         return { weeks, days: g.rem, month, edd };
       }
     } else if (mode === "month" && monthVal) {
       const m = Math.max(1, Math.min(9, Number(monthVal) || 1));
       const approxWeeks = Math.min(40, Math.round((m - 0.5) * 4.345));
       const approxLmp = new Date(Date.now() - approxWeeks * 7 * 86400000).toISOString().slice(0, 10);
-      const edd = KB.eddFromLmp(approxLmp);
+      const edd = eddFromLmp(approxLmp);
       return { weeks: approxWeeks, days: 0, month: m, edd, approxLmp };
     }
     return null;
@@ -495,7 +511,7 @@
       recs = DB.getVerifiedRecords("dos_donts", null).filter((r) => r.month == null).slice(0, 2);
     }
     const summary = recs.length
-      ? recs.map((r) => `• ${r.hindi_summary} (${r.id})`).join("\n")
+      ? recs.map((r) => `• ${isHi ? r.hindi_summary : (r.english_summary || r.hindi_summary)} (${r.id})`).join("\n")
       : (isHi ? "नियमित पौष्टिक, ताज़ा और सुपाच्य आहार लें तथा पर्याप्त विश्राम करें।" : "Follow regular wholesome, fresh diet and adequate rest.");
     const warn108 = isHi
       ? "🚨 आपातकालीन चेतावनी: रक्तस्राव, पानी छूटना, तेज़ सिरदर्द, दौरे या शिशु की हलचल कम होने पर तुरंत 108 पर कॉल करें।"
@@ -687,6 +703,19 @@
     return key || "";
   }
 
+  function formatSthana(st) {
+    if (S.lang === "en" && st === "शारीर") return "Sharira";
+    return st || "";
+  }
+
+  function formatConflictNote(note) {
+    if (!note) return "";
+    if (S.lang === "en" && note === "शास्त्रीय मान्यता; आधुनिक मत भिन्न") {
+      return "Classical view; modern view differs";
+    }
+    return note;
+  }
+
   function renderRecordList(recs) {
     const isHi = S.lang === "hi";
     if (!recs.length) {
@@ -695,13 +724,25 @@
         <p class="mb0">📜 <b>${isHi ? "संहिता-पाठ जुड़ रहा है" : "Samhita text is being added"}</b></p>
       </div>`;
     }
-    return recs.map((r) => `
+    return recs.map((r) => {
+      const mainText = isHi ? (r.hindi_summary || "") : (r.english_summary || r.hindi_summary || "");
+      const commText = isHi ? (r.english_summary || "") : (r.hindi_summary || "");
+      const commLabel = isHi ? "💬 English commentary" : "💬 हिंदी टिप्पणी";
+      const shlokaLabel = isHi ? "📜 श्लोक देखें" : "📜 View Shloka";
+      const cNote = formatConflictNote(r.conflict_note);
+      return `
       <div class="shloka">
-        <div class="sa">${E(r.sanskrit)}</div>
-        <p class="mb0 mt">${E(r.hindi_summary)}</p>
-        ${r.conflict_note ? `<div class="mt"><span class="chip chip-warn">⚠️ ${E(r.conflict_note)}</span></div>` : ""}
-        <div class="ref">${E(formatSamhita(r.samhita))} · ${E(r.sthana || "")} ${E(r.adhyaya || "")}/${E(r.shloka_no_niimh || "")} · <code>${E(r.id)}</code></div>
-      </div>`).join("");
+        <p class="mb0">${E(mainText)}</p>
+        <div class="row mt" style="gap:8px;">
+          ${r.sanskrit ? `<button type="button" class="btn btn-ghost btn-sm" data-action="toggle-shloka">${shlokaLabel}</button>` : ""}
+          ${commText ? `<button type="button" class="btn btn-ghost btn-sm" data-action="toggle-commentary">${commLabel}</button>` : ""}
+        </div>
+        ${r.sanskrit ? `<div class="shloka-body mt" hidden><div class="sa">${E(r.sanskrit)}</div></div>` : ""}
+        ${commText ? `<div class="commentary-body mt small muted" hidden style="padding:8px 10px;background:var(--glass);border-radius:8px;border:1px solid var(--line);">${E(commText)}</div>` : ""}
+        ${cNote ? `<div class="mt"><span class="chip chip-warn">⚠️ ${E(cNote)}</span></div>` : ""}
+        <div class="ref">${E(formatSamhita(r.samhita))} · ${E(formatSthana(r.sthana))} ${E(r.adhyaya || "")}/${E(r.shloka_no_niimh || "")} · <code>${E(r.id)}</code></div>
+      </div>`;
+    }).join("");
   }
 
   function renderVerifiedBlock(tag, month) {
@@ -1255,11 +1296,10 @@
     }
   }
 
-  /* ------------------- 7. ASK FEATURE (BM25 + AyurParam + Validator + Fallback) ------------------- */
+  /* ------------------- 7. ASK FEATURE (BM25 + Extractive Fallback + Validator) ------------------- */
   function viewAsk() {
     const isHi = S.lang === "hi";
     const p = DB.getSelfProfile() || {};
-    const ep = window.RAG && window.RAG.getEndpoint ? window.RAG.getEndpoint() : "";
     const samples = isHi
       ? [
           "5वें महीने में क्या खाना चाहिए?",
@@ -1290,10 +1330,10 @@
       } else {
         const srcBadge =
           res.source === "ayurparam"
-            ? "🤖 AyurParam (Validated)"
+            ? (isHi ? "🤖 AyurParam (सत्यापित)" : "🤖 AyurParam (Validated)")
             : res.source === "extractive_fallback_validator_rejected"
-            ? "🛡️ Extractive Fallback (Citation Validator rejected external ID)"
-            : "📖 Extractive Fallback (Verified DB)";
+            ? (isHi ? "🛡️ सत्यापित संहिता उत्तर (बाहरी संदर्भ अस्वीकृत)" : "🛡️ Extractive Fallback (Citation Validator rejected external ID)")
+            : (isHi ? "📖 सत्यापित संहिता उत्तर (DB)" : "📖 Extractive Fallback (Verified DB)");
         outHTML = `
         <div class="glass answer mt">
           <div class="row between">
@@ -1313,21 +1353,9 @@
       <div class="glass card">
         <div class="row between">
           <button type="button" class="btn btn-ghost btn-sm" data-action="go-home">${E(t("backHome"))}</button>
-          <button type="button" class="btn btn-ghost btn-sm" data-action="toggle-ask-settings">⚙️ ${isHi ? "AyurParam सेटिंग्स" : "AyurParam Settings"}</button>
         </div>
         <h2 class="mt mb0">🔎 ${E(t("askTitle"))}</h2>
         <p class="small muted">${E(t("askDesc"))}${p.month ? ` (${isHi ? `आपका माह: ${p.month}` : `Your Month: ${p.month}`})` : ""}</p>
-
-        ${S.showAskSettings ? `
-          <div class="glass card mt" style="background:var(--glass2);">
-            <label for="ayurparamUrl">${isHi ? "AyurParam GPU Endpoint URL (वैकल्पिक — खाली रहने पर Extractive Fallback चलेगा)" : "AyurParam GPU Endpoint URL (Optional — leaves Extractive Fallback active when blank)"}</label>
-            <div class="row">
-              <input id="ayurparamUrl" value="${E(ep)}" placeholder="https://your-ayurparam-server/generate" style="flex:1;" />
-              <button type="button" class="btn btn-ok btn-sm" data-action="save-ask-endpoint">${isHi ? "सहेजें" : "Save"}</button>
-            </div>
-            <p class="small muted mt mb0">🔒 ${isHi ? "सर्वर पर केवल प्रश्न, माह और भाषा जाती है (नाम, आयु या LMP नहीं)।" : "Only question, month, and language are sent (never name, age, or LMP)."}</p>
-          </div>
-        ` : ""}
 
         <div class="row mt">
           <input id="askQ" value="${E(S.askQuery)}" placeholder="${isHi ? "अपना प्रश्न यहाँ लिखें…" : "Type your question here…"}" style="flex:1;" />
@@ -1454,7 +1482,7 @@
       const monthSel = val("f_month");
       if (mode === "lmp") {
         if (!lmp) return toast(S.lang === "hi" ? "कृपया LMP तिथि दर्ज करें" : "Please enter LMP date", true);
-        const g = KB.gestationalWeeks(lmp);
+        const g = gestationalWeeks(lmp);
         if (!g || g.days < 0 || g.days > 300) {
           return toast(S.lang === "hi" ? "कृपया सही LMP तिथि जाँचें" : "Please check the LMP date", true);
         }
@@ -1600,16 +1628,25 @@
       render();
       window.scrollTo(0, 0);
     },
-    "toggle-ask-settings"() {
-      S.showAskSettings = !S.showAskSettings;
-      render();
+    "toggle-shloka"(el) {
+      const card = el.closest(".shloka");
+      const body = card && card.querySelector(".shloka-body");
+      if (!body) return;
+      const isHi = S.lang === "hi";
+      body.hidden = !body.hidden;
+      el.textContent = body.hidden
+        ? (isHi ? "📜 श्लोक देखें" : "📜 View Shloka")
+        : (isHi ? "📜 श्लोक छिपाएँ" : "📜 Hide Shloka");
     },
-    "save-ask-endpoint"() {
-      const url = val("ayurparamUrl");
-      if (window.RAG && window.RAG.setEndpoint) window.RAG.setEndpoint(url);
-      toast(S.lang === "hi" ? "Endpoint सहेजा गया" : "Endpoint saved");
-      S.showAskSettings = false;
-      render();
+    "toggle-commentary"(el) {
+      const card = el.closest(".shloka");
+      const body = card && card.querySelector(".commentary-body");
+      if (!body) return;
+      const isHi = S.lang === "hi";
+      body.hidden = !body.hidden;
+      el.textContent = body.hidden
+        ? (isHi ? "💬 English commentary" : "💬 हिंदी टिप्पणी")
+        : (isHi ? "💬 Hide English commentary" : "💬 हिंदी टिप्पणी छिपाएँ");
     },
     async "ask-chip"(el) {
       const q = el.dataset.q || "";

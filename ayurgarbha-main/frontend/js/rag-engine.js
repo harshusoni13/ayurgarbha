@@ -113,6 +113,7 @@
       r.samhita || "",
       r.sthana || "",
       r.hindi_summary || "",
+      r.english_summary || "",
       r.sanskrit || "",
       (r.section_tag || []).join(" "),
       r.month != null ? `month ${r.month} माह ${r.month}` : ""
@@ -311,7 +312,7 @@
   function buildExtractiveAnswer(hits, lang) {
     if (!hits || !hits.length) return "";
     const top = hits[0].record;
-    return top.hindi_summary || "";
+    return lang === "en" ? (top.english_summary || top.hindi_summary || "") : (top.hindi_summary || "");
   }
 
   // ---- Full Ask Pipeline (Spec Section 4) ----
